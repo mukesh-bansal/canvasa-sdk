@@ -478,7 +478,19 @@ export class CanvasaTutorElement extends HTMLElement {
   private _handleTopicGo(): void {
     const t = this._topic.trim()
     if (!t) return
-    this._launch('ask', { ask: t, mode: 'teach' })
+    const lessonMode = (this.getAttribute('lesson-mode') as CanvasaLessonMode) || 'picker'
+    // Fire host-overridable event (same contract as concept-card clicks)
+    const ev = new CustomEvent('canvasa-lesson-click', {
+      detail: { slug: '', title: t, cached: false, source: 'ondemand', ask: t, mode: lessonMode },
+      bubbles: true, composed: true, cancelable: true,
+    })
+    if (!this.dispatchEvent(ev)) return  // host called preventDefault()
+    if (lessonMode === 'teach' || lessonMode === 'guide') {
+      this._launch('ask', { ask: t, mode: lessonMode })
+    } else {
+      // Show the teach-me / guide-me picker — same modal as concept-card clicks.
+      this._openModePicker({ slug: '', title: t, cached: false, source: 'ondemand', ask: t })
+    }
   }
 
   // Source picker — Internal wiki + External wiki, debounced search
@@ -1007,7 +1019,7 @@ export class CanvasaTutorElement extends HTMLElement {
     }
   }
 
-  private _openModePicker(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string }): void {
+  private _openModePicker(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string; ask?: string }): void {
     const modal = document.createElement('div')
     modal.className = 'tutor-mode-modal'
     modal.innerHTML = `
@@ -1036,6 +1048,7 @@ export class CanvasaTutorElement extends HTMLElement {
         const mode = (b.dataset.mode as CanvasaLessonMode) || 'teach'
         close()
         if (detail.slug) this._launch('lesson', { lesson: detail.slug, mode, statement: detail.statement ?? '' })
+        else if (detail.ask) this._launch('ask', { ask: detail.ask, mode })
         else if (detail.statement) this._launch('ask', { ask: detail.statement, mode })
       })
     })
