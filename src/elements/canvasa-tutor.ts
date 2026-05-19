@@ -222,9 +222,27 @@ export class CanvasaTutorElement extends HTMLElement {
     this.classList.add('canvasa-tutor', 'tutor-root', 'tutor-page')
     setApiConfig({ host: getCanvasaHost(), tenant: this._tenant() })
 
-    // Honor default-tab + deep-link attributes
+    // Tab persistence — the user's return URL should land them on the same
+    // tab they launched the lesson from. Priority order:
+    //   1. URL hash  (#tab=concepts) — set by the SDK before any launch so
+    //      ?return=<host-url>#tab=concepts round-trips on Back
+    //   2. sessionStorage  ('canvasa:active-tab') — fallback within the same
+    //      session if the host strips the hash
+    //   3. default-tab attribute
+    //   4. 'ondemand'
+    const hashTab = this._readTabFromHash()
+    const storedTab = (() => {
+      try { return (window.sessionStorage.getItem('canvasa:active-tab') || '') as CanvasaTutorTab } catch { return '' as CanvasaTutorTab }
+    })()
     const defaultTab = (this.getAttribute('default-tab') as CanvasaTutorTab) || 'ondemand'
-    this._tab = defaultTab
+    const validTabs: CanvasaTutorTab[] = ['ondemand', 'concepts', 'problems']
+    this._tab = (validTabs.includes(hashTab as CanvasaTutorTab) ? hashTab :
+                 validTabs.includes(storedTab as CanvasaTutorTab) ? storedTab :
+                 defaultTab) as CanvasaTutorTab
+    // Write the resolved tab back to hash + sessionStorage so the
+    // ?return=window.location.href round-trip captured at launch time
+    // already reflects the active tab.
+    this._writeTabState(this._tab)
 
     // Deep-link: if `lesson` or `ask` is on the element, launch immediately
     const lessonSlug = this.getAttribute('lesson')
@@ -261,7 +279,37 @@ export class CanvasaTutorElement extends HTMLElement {
   // ── Programmatic API ────────────────────────────────────────────
 
   setTenant(tenant: string): void { this.setAttribute('tenant', tenant) }
-  setTab(tab: CanvasaTutorTab): void { this._tab = tab; this._render(); this._fireTab() }
+  setTab(tab: CanvasaTutorTab): void {
+    this._tab = tab
+    // Persist in URL hash + sessionStorage so Back from chalkboard restores
+    // this tab (return-URL round-trip includes the hash).
+    this._writeTabState(tab)
+    this._render()
+    this._fireTab()
+  }
+
+  private _readTabFromHash(): string {
+    if (typeof window === 'undefined' || !window.location) return ''
+    const h = window.location.hash || ''
+    const m = h.match(/(?:^|[#&])tab=([a-z]+)/i)
+    return m ? m[1].toLowerCase() : ''
+  }
+
+  private _writeTabState(tab: CanvasaTutorTab): void {
+    if (typeof window === 'undefined') return
+    try { window.sessionStorage.setItem('canvasa:active-tab', tab) } catch { /* ignore */ }
+    if (window.location && window.history && window.history.replaceState) {
+      try {
+        const u = new URL(window.location.href)
+        // Preserve other hash params if any (e.g. #tab=concepts&foo=bar)
+        const existing = (u.hash || '').replace(/^#/, '')
+        const parts = existing.split('&').filter(p => p && !/^tab=/.test(p))
+        parts.push(`tab=${tab}`)
+        u.hash = parts.join('&')
+        window.history.replaceState(null, '', u.toString())
+      } catch { /* ignore */ }
+    }
+  }
   launchAsk(topic: string, opts?: { mode?: CanvasaLessonMode }): void {
     this._launch('ask', { ask: topic, mode: opts?.mode ?? 'teach' })
   }
