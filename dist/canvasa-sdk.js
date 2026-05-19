@@ -1,7 +1,7 @@
-const S = "0.1.0-alpha.10";
-let I = "https://canvasa.olympiz.ai", T = "default";
-function j(i) {
-  i.host && (I = i.host.replace(/\/$/, "")), i.tenant && (T = i.tenant);
+const $ = "0.1.0-alpha.11";
+let I = "https://canvasa.olympiz.ai", L = "default";
+function B(i) {
+  i.host && (I = i.host.replace(/\/$/, "")), i.tenant && (L = i.tenant);
 }
 function P(i, t) {
   const e = new URL(`${I}/api${i}`);
@@ -12,21 +12,7 @@ function P(i, t) {
 }
 async function _(i, t) {
   const e = await fetch(P(i, t), {
-    headers: { "X-Tutor-Tenant": T, Accept: "application/json" },
-    credentials: "omit"
-  });
-  if (!e.ok) throw new Error(`canvasa-api ${i} HTTP ${e.status}`);
-  return await e.json();
-}
-async function B(i, t) {
-  const e = await fetch(P(i), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Tutor-Tenant": T,
-      Accept: "application/json"
-    },
-    body: JSON.stringify(t),
+    headers: { "X-Tutor-Tenant": L, Accept: "application/json" },
     credentials: "omit"
   });
   if (!e.ok) throw new Error(`canvasa-api ${i} HTTP ${e.status}`);
@@ -35,7 +21,21 @@ async function B(i, t) {
 async function U(i, t) {
   const e = await fetch(P(i), {
     method: "POST",
-    headers: { "X-Tutor-Tenant": T, Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Tutor-Tenant": L,
+      Accept: "application/json"
+    },
+    body: JSON.stringify(t),
+    credentials: "omit"
+  });
+  if (!e.ok) throw new Error(`canvasa-api ${i} HTTP ${e.status}`);
+  return await e.json();
+}
+async function D(i, t) {
+  const e = await fetch(P(i), {
+    method: "POST",
+    headers: { "X-Tutor-Tenant": L, Accept: "application/json" },
     body: t,
     credentials: "omit"
   });
@@ -65,19 +65,19 @@ const w = {
     level: o,
     q: n
   }),
-  generateLesson: (i) => B("/generate-lesson", { topic: i }),
-  generateFromUrl: (i, t) => B("/generate-from-url", { url: i, title: t }),
+  generateLesson: (i) => U("/generate-lesson", { topic: i }),
+  generateFromUrl: (i, t) => U("/generate-from-url", { url: i, title: t }),
   generateFromPdf: (i) => {
     const t = new FormData();
-    return t.append("file", i), U("/generate-from-pdf", t);
+    return t.append("file", i), D("/generate-from-pdf", t);
   },
   lessonStatus: (i) => _(`/lesson-status/${encodeURIComponent(i)}`),
   wikiSearch: (i) => _("/wiki-opensearch", { q: i }),
   superstemSearch: (i) => _("/superstem-search", { q: i }),
   // Phase 3 endpoint — graceful fallback handled in canvasa-tutor.ts when missing
   brand: (i) => _(`/brand/${encodeURIComponent(i)}`)
-}, D = ':root,.tutor-root{--tutor-bg: #fbfaf6;--tutor-surface: #ffffff;--tutor-surface-soft: #f6f4ee;--tutor-text: #1a1a2e;--tutor-muted: #4a4a5a;--tutor-faint: #8b8b9b;--tutor-border: #e7ecf3;--tutor-border-soft: #efefe7;--tutor-accent: #c9a227;--tutor-accent-soft: rgba(201, 162, 39, .12);--tutor-accent-strong:#8f7016;--tutor-on-accent: #14213d;--tutor-primary: #14213d;--tutor-primary-hover:#0a162b;--tutor-on-primary: #ffffff;--tutor-success: #047857;--tutor-warning: #b45309;--tutor-danger: #b91c1c;--tutor-radius: 12px;--tutor-radius-sm: 8px;--tutor-radius-lg: 18px;--tutor-font-display: "Playfair Display", Georgia, serif;--tutor-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;--tutor-font-mono: "JetBrains Mono", ui-monospace, monospace;--tutor-shadow-sm: 0 1px 3px rgba(0,0,0,.04);--tutor-shadow: 0 4px 14px rgba(0,0,0,.06)}.tutor-page{max-width:1100px;margin:0 auto;padding:32px 16px 64px;font-family:var(--tutor-font-body);color:var(--tutor-text);background:var(--tutor-bg)}.tutor-hero{text-align:center;margin-bottom:40px}.tutor-hero h1{font-family:var(--tutor-font-display);font-size:clamp(2rem,4vw,3rem);line-height:1.15;margin:0 0 8px;color:var(--tutor-text);font-weight:700}.tutor-hero h1 em{color:var(--tutor-accent-strong);font-style:italic}.tutor-hero p{color:var(--tutor-muted);font-size:1.05rem;margin:0}.tutor-tabs{display:flex;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--tutor-border);margin-bottom:24px}.tutor-tab{background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 0;font:inherit;color:var(--tutor-muted);cursor:pointer;font-size:.95rem;white-space:nowrap;transition:color .15s,border-color .15s}.tutor-tab:hover{color:var(--tutor-text)}.tutor-tab.is-active{color:var(--tutor-text);border-bottom-color:var(--tutor-accent-strong);font-weight:500}.tutor-tab__count{color:var(--tutor-muted);font-size:.78rem;margin-left:4px;font-weight:400}.tutor-section{background:var(--tutor-surface);border:1px solid var(--tutor-border);border-radius:var(--tutor-radius);padding:20px 22px;margin-bottom:16px;box-shadow:var(--tutor-shadow-sm)}.tutor-section h2{font-family:var(--tutor-font-display);font-size:1.35rem;font-weight:600;margin:0 0 12px;color:var(--tutor-text)}.tutor-section h3{font-family:var(--tutor-font-display);font-size:1.05rem;font-weight:500;margin:0 0 8px;color:var(--tutor-text);display:flex;align-items:center;gap:8px}.tutor-section__sub{font-size:.78rem;color:var(--tutor-muted);margin:-8px 0 14px}.tutor-input{display:block;width:100%;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-text);font:inherit;font-size:.95rem;transition:border-color .15s,box-shadow .15s}.tutor-input::placeholder{color:var(--tutor-faint)}.tutor-input:focus{outline:none;border-color:var(--tutor-accent-strong);box-shadow:0 0 0 3px var(--tutor-accent-soft)}.tutor-input--sm{padding:8px 12px;font-size:.9rem}.tutor-row{display:flex;gap:10px;flex-wrap:wrap}@media (min-width: 640px){.tutor-row{flex-wrap:nowrap}}.tutor-row>.tutor-input{flex:1 1 auto}.tutor-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:var(--tutor-radius-sm);border:1px solid transparent;background:var(--tutor-primary);color:var(--tutor-on-primary);font:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,opacity .15s}.tutor-btn:hover:not(:disabled){background:var(--tutor-primary-hover)}.tutor-btn:disabled{opacity:.5;cursor:not-allowed}.tutor-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);font:inherit;font-size:.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}.tutor-chip:hover{border-color:var(--tutor-accent-strong);color:var(--tutor-text)}.tutor-chip.is-active{background:var(--tutor-primary);color:var(--tutor-on-primary);border-color:var(--tutor-primary)}.tutor-sources{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}@media (min-width: 720px){.tutor-sources{grid-template-columns:1fr 1fr 1fr}}.tutor-source{text-align:left;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;transition:border-color .15s,background .15s}.tutor-source:hover{border-color:var(--tutor-accent-strong)}.tutor-source.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-source__row{display:flex;gap:10px;align-items:flex-start}.tutor-source__dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--tutor-border);margin-top:4px;flex-shrink:0}.tutor-source.is-active .tutor-source__dot{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-strong)}.tutor-source__lbl{font-weight:500;font-size:.9rem}.tutor-source__sub{font-size:.78rem;color:var(--tutor-muted);margin-top:2px}.tutor-results{margin-top:12px;border:1px solid var(--tutor-border);border-radius:var(--tutor-radius-sm);background:var(--tutor-bg);overflow:hidden}.tutor-result{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;font:inherit;color:var(--tutor-text);cursor:pointer;transition:background .12s;border-bottom:1px solid var(--tutor-border)}.tutor-result:last-child{border-bottom:none}.tutor-result:hover{background:var(--tutor-surface-soft)}.tutor-result__title{font-size:.9rem;font-weight:500}.tutor-result__blurb{font-size:.78rem;color:var(--tutor-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-hint{font-size:.72rem;color:var(--tutor-muted);margin-top:12px}.tutor-drop{border:2px dashed var(--tutor-border);background:var(--tutor-bg);border-radius:var(--tutor-radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}.tutor-drop:hover{border-color:var(--tutor-accent-strong)}.tutor-drop.is-hover{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-drop__icon{font-size:1.6rem;margin-bottom:8px}.tutor-drop__hint{color:var(--tutor-text);font-size:.92rem}.tutor-drop__hint strong{color:var(--tutor-accent-strong)}.tutor-card-grid{display:grid;grid-template-columns:1fr;gap:10px}@media (min-width: 720px){.tutor-card-grid{grid-template-columns:1fr 1fr}}@media (min-width: 1024px){.tutor-card-grid{grid-template-columns:1fr 1fr 1fr}}.tutor-card{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;transition:border-color .15s,box-shadow .15s}.tutor-card:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-card__title{font-size:.9rem}.tutor-card__meta{margin-top:6px;display:flex;gap:10px;font-size:.7rem;color:var(--tutor-muted);align-items:center}.tutor-card__cached{color:var(--tutor-success)}.tutor-prob{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}.tutor-prob:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-prob__head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tutor-prob__title{font-size:.9rem;font-weight:500}.tutor-prob__statement{margin-top:6px;font-size:.78rem;color:var(--tutor-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-pill{font-size:.62rem;padding:2px 6px;border-radius:4px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);text-transform:lowercase;letter-spacing:.04em}.tutor-pill--easy{color:var(--tutor-success);border-color:#0478574d}.tutor-pill--medium{color:var(--tutor-warning);border-color:#b453094d}.tutor-pill--hard{color:var(--tutor-danger);border-color:#b91c1c4d}.tutor-status{margin-top:12px;font-size:.85rem;color:var(--tutor-muted)}.tutor-status--error{color:var(--tutor-danger)}.tutor-empty{font-size:.88rem;color:var(--tutor-muted);padding:12px 0}.tutor-modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:#0d122073;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}.tutor-modal{background:var(--tutor-surface);border-radius:var(--tutor-radius-lg);box-shadow:0 20px 60px #0000004d;padding:28px 32px;width:100%;max-width:560px;font-family:var(--tutor-font-body);color:var(--tutor-text)}.tutor-modal__eyebrow{font-size:11px;font-weight:600;color:var(--tutor-accent-strong);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px}.tutor-modal__title{font-family:var(--tutor-font-display);font-size:22px;font-weight:600;margin:0 0 4px;color:var(--tutor-text)}.tutor-modal__sub{font-size:12px;color:var(--tutor-muted);margin:0 0 18px}.tutor-modal__option{display:block;width:100%;text-align:left;padding:16px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;margin-bottom:10px;transition:border-color .12s,background .12s}.tutor-modal__option:hover{border-color:var(--tutor-accent-strong)}.tutor-modal__option.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-modal__option-row{display:flex;align-items:flex-start;gap:12px}.tutor-modal__radio{margin-top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--tutor-border);flex-shrink:0;display:flex;align-items:center;justify-content:center}.tutor-modal__option.is-active .tutor-modal__radio{border-color:var(--tutor-accent-strong)}.tutor-modal__radio-dot{width:8px;height:8px;border-radius:50%;background:var(--tutor-accent-strong)}.tutor-modal__option-title{font-family:var(--tutor-font-display);font-style:italic;font-weight:600;font-size:16px;color:var(--tutor-accent-strong);display:inline}.tutor-modal__option-badge{margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.14em;padding:2px 6px;border-radius:3px;background:#3fcc7a2e;color:#1a7341;text-transform:uppercase}.tutor-modal__option-desc{font-size:12px;color:var(--tutor-muted);margin-top:6px;line-height:1.5}.tutor-modal__actions{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.tutor-btn--ghost{background:transparent;color:var(--tutor-muted);border:1px solid var(--tutor-border);padding:8px 16px;border-radius:var(--tutor-radius-sm);font:inherit;font-size:13px;cursor:pointer;transition:color .12s,border-color .12s}.tutor-btn--ghost:hover:not(:disabled){color:var(--tutor-text);border-color:var(--tutor-accent-strong)}.tutor-btn--ghost:disabled{opacity:.5;cursor:not-allowed}.canvasa-tutor{position:relative}.canvasa-tutor__pill{position:absolute;top:12px;right:12px;z-index:9050;padding:4px 10px;border-radius:999px;background:var(--tutor-pill-bg, #0b1428);color:var(--tutor-pill-fg, #f6d77a);font:600 11px/1 JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em;border:1px solid rgba(246,215,122,.25);box-shadow:0 2px 8px #0000002e;pointer-events:none;-webkit-user-select:none;user-select:none}', g = 30;
-function L() {
+}, F = ':root,.tutor-root{--tutor-bg: #fbfaf6;--tutor-surface: #ffffff;--tutor-surface-soft: #f6f4ee;--tutor-text: #1a1a2e;--tutor-muted: #4a4a5a;--tutor-faint: #8b8b9b;--tutor-border: #e7ecf3;--tutor-border-soft: #efefe7;--tutor-accent: #c9a227;--tutor-accent-soft: rgba(201, 162, 39, .12);--tutor-accent-strong:#8f7016;--tutor-on-accent: #14213d;--tutor-primary: #14213d;--tutor-primary-hover:#0a162b;--tutor-on-primary: #ffffff;--tutor-success: #047857;--tutor-warning: #b45309;--tutor-danger: #b91c1c;--tutor-radius: 12px;--tutor-radius-sm: 8px;--tutor-radius-lg: 18px;--tutor-font-display: "Playfair Display", Georgia, serif;--tutor-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;--tutor-font-mono: "JetBrains Mono", ui-monospace, monospace;--tutor-shadow-sm: 0 1px 3px rgba(0,0,0,.04);--tutor-shadow: 0 4px 14px rgba(0,0,0,.06)}.tutor-page{max-width:1100px;margin:0 auto;padding:32px 16px 64px;font-family:var(--tutor-font-body);color:var(--tutor-text);background:var(--tutor-bg)}.tutor-hero{text-align:center;margin-bottom:40px}.tutor-hero h1{font-family:var(--tutor-font-display);font-size:clamp(2rem,4vw,3rem);line-height:1.15;margin:0 0 8px;color:var(--tutor-text);font-weight:700}.tutor-hero h1 em{color:var(--tutor-accent-strong);font-style:italic}.tutor-hero p{color:var(--tutor-muted);font-size:1.05rem;margin:0}.tutor-tabs{display:flex;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--tutor-border);margin-bottom:24px}.tutor-tab{background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 0;font:inherit;color:var(--tutor-muted);cursor:pointer;font-size:.95rem;white-space:nowrap;transition:color .15s,border-color .15s}.tutor-tab:hover{color:var(--tutor-text)}.tutor-tab.is-active{color:var(--tutor-text);border-bottom-color:var(--tutor-accent-strong);font-weight:500}.tutor-tab__count{color:var(--tutor-muted);font-size:.78rem;margin-left:4px;font-weight:400}.tutor-section{background:var(--tutor-surface);border:1px solid var(--tutor-border);border-radius:var(--tutor-radius);padding:20px 22px;margin-bottom:16px;box-shadow:var(--tutor-shadow-sm)}.tutor-section h2{font-family:var(--tutor-font-display);font-size:1.35rem;font-weight:600;margin:0 0 12px;color:var(--tutor-text)}.tutor-section h3{font-family:var(--tutor-font-display);font-size:1.05rem;font-weight:500;margin:0 0 8px;color:var(--tutor-text);display:flex;align-items:center;gap:8px}.tutor-section__sub{font-size:.78rem;color:var(--tutor-muted);margin:-8px 0 14px}.tutor-input{display:block;width:100%;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-text);font:inherit;font-size:.95rem;transition:border-color .15s,box-shadow .15s}.tutor-input::placeholder{color:var(--tutor-faint)}.tutor-input:focus{outline:none;border-color:var(--tutor-accent-strong);box-shadow:0 0 0 3px var(--tutor-accent-soft)}.tutor-input--sm{padding:8px 12px;font-size:.9rem}.tutor-row{display:flex;gap:10px;flex-wrap:wrap}@media (min-width: 640px){.tutor-row{flex-wrap:nowrap}}.tutor-row>.tutor-input{flex:1 1 auto}.tutor-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:var(--tutor-radius-sm);border:1px solid transparent;background:var(--tutor-primary);color:var(--tutor-on-primary);font:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,opacity .15s}.tutor-btn:hover:not(:disabled){background:var(--tutor-primary-hover)}.tutor-btn:disabled{opacity:.5;cursor:not-allowed}.tutor-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);font:inherit;font-size:.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}.tutor-chip:hover{border-color:var(--tutor-accent-strong);color:var(--tutor-text)}.tutor-chip.is-active{background:var(--tutor-primary);color:var(--tutor-on-primary);border-color:var(--tutor-primary)}.tutor-sources{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}@media (min-width: 720px){.tutor-sources{grid-template-columns:1fr 1fr 1fr}}.tutor-source{text-align:left;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;transition:border-color .15s,background .15s}.tutor-source:hover{border-color:var(--tutor-accent-strong)}.tutor-source.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-source__row{display:flex;gap:10px;align-items:flex-start}.tutor-source__dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--tutor-border);margin-top:4px;flex-shrink:0}.tutor-source.is-active .tutor-source__dot{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-strong)}.tutor-source__lbl{font-weight:500;font-size:.9rem}.tutor-source__sub{font-size:.78rem;color:var(--tutor-muted);margin-top:2px}.tutor-results{margin-top:12px;border:1px solid var(--tutor-border);border-radius:var(--tutor-radius-sm);background:var(--tutor-bg);overflow:hidden}.tutor-result{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;font:inherit;color:var(--tutor-text);cursor:pointer;transition:background .12s;border-bottom:1px solid var(--tutor-border)}.tutor-result:last-child{border-bottom:none}.tutor-result:hover{background:var(--tutor-surface-soft)}.tutor-result__title{font-size:.9rem;font-weight:500}.tutor-result__blurb{font-size:.78rem;color:var(--tutor-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-hint{font-size:.72rem;color:var(--tutor-muted);margin-top:12px}.tutor-drop{border:2px dashed var(--tutor-border);background:var(--tutor-bg);border-radius:var(--tutor-radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}.tutor-drop:hover{border-color:var(--tutor-accent-strong)}.tutor-drop.is-hover{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-drop__icon{font-size:1.6rem;margin-bottom:8px}.tutor-drop__hint{color:var(--tutor-text);font-size:.92rem}.tutor-drop__hint strong{color:var(--tutor-accent-strong)}.tutor-card-grid{display:grid;grid-template-columns:1fr;gap:10px}@media (min-width: 720px){.tutor-card-grid{grid-template-columns:1fr 1fr}}@media (min-width: 1024px){.tutor-card-grid{grid-template-columns:1fr 1fr 1fr}}.tutor-card{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;transition:border-color .15s,box-shadow .15s}.tutor-card:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-card__title{font-size:.9rem}.tutor-card__meta{margin-top:6px;display:flex;gap:10px;font-size:.7rem;color:var(--tutor-muted);align-items:center}.tutor-card__cached{color:var(--tutor-success)}.tutor-prob{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}.tutor-prob:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-prob__head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tutor-prob__title{font-size:.9rem;font-weight:500}.tutor-prob__statement{margin-top:6px;font-size:.78rem;color:var(--tutor-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-pill{font-size:.62rem;padding:2px 6px;border-radius:4px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);text-transform:lowercase;letter-spacing:.04em}.tutor-pill--easy{color:var(--tutor-success);border-color:#0478574d}.tutor-pill--medium{color:var(--tutor-warning);border-color:#b453094d}.tutor-pill--hard{color:var(--tutor-danger);border-color:#b91c1c4d}.tutor-status{margin-top:12px;font-size:.85rem;color:var(--tutor-muted)}.tutor-status--error{color:var(--tutor-danger)}.tutor-empty{font-size:.88rem;color:var(--tutor-muted);padding:12px 0}.tutor-modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:#0d122073;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}.tutor-modal{background:var(--tutor-surface);border-radius:var(--tutor-radius-lg);box-shadow:0 20px 60px #0000004d;padding:28px 32px;width:100%;max-width:560px;font-family:var(--tutor-font-body);color:var(--tutor-text)}.tutor-modal__eyebrow{font-size:11px;font-weight:600;color:var(--tutor-accent-strong);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px}.tutor-modal__title{font-family:var(--tutor-font-display);font-size:22px;font-weight:600;margin:0 0 4px;color:var(--tutor-text)}.tutor-modal__sub{font-size:12px;color:var(--tutor-muted);margin:0 0 18px}.tutor-modal__option{display:block;width:100%;text-align:left;padding:16px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;margin-bottom:10px;transition:border-color .12s,background .12s}.tutor-modal__option:hover{border-color:var(--tutor-accent-strong)}.tutor-modal__option.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-modal__option-row{display:flex;align-items:flex-start;gap:12px}.tutor-modal__radio{margin-top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--tutor-border);flex-shrink:0;display:flex;align-items:center;justify-content:center}.tutor-modal__option.is-active .tutor-modal__radio{border-color:var(--tutor-accent-strong)}.tutor-modal__radio-dot{width:8px;height:8px;border-radius:50%;background:var(--tutor-accent-strong)}.tutor-modal__option-title{font-family:var(--tutor-font-display);font-style:italic;font-weight:600;font-size:16px;color:var(--tutor-accent-strong);display:inline}.tutor-modal__option-badge{margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.14em;padding:2px 6px;border-radius:3px;background:#3fcc7a2e;color:#1a7341;text-transform:uppercase}.tutor-modal__option-desc{font-size:12px;color:var(--tutor-muted);margin-top:6px;line-height:1.5}.tutor-modal__actions{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.tutor-btn--ghost{background:transparent;color:var(--tutor-muted);border:1px solid var(--tutor-border);padding:8px 16px;border-radius:var(--tutor-radius-sm);font:inherit;font-size:13px;cursor:pointer;transition:color .12s,border-color .12s}.tutor-btn--ghost:hover:not(:disabled){color:var(--tutor-text);border-color:var(--tutor-accent-strong)}.tutor-btn--ghost:disabled{opacity:.5;cursor:not-allowed}.canvasa-tutor{position:relative}.canvasa-tutor__pill{position:absolute;top:12px;right:12px;z-index:9050;padding:4px 10px;border-radius:999px;background:var(--tutor-pill-bg, #0b1428);color:var(--tutor-pill-fg, #f6d77a);font:600 11px/1 JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em;border:1px solid rgba(246,215,122,.25);box-shadow:0 2px 8px #0000002e;pointer-events:none;-webkit-user-select:none;user-select:none}', g = 30;
+function T() {
   return typeof window < "u" && window.CANVASA_HOST ? window.CANVASA_HOST : "https://canvasa.olympiz.ai";
 }
 let M = !1;
@@ -89,7 +89,7 @@ function G() {
     return;
   }
   const t = document.createElement("style");
-  t.id = i, t.textContent = D, document.head.appendChild(t), M = !0;
+  t.id = i, t.textContent = F, document.head.appendChild(t), M = !0;
 }
 function p(i) {
   return i == null ? "" : String(i).replace(/[&<>"']/g, (t) => ({
@@ -137,7 +137,7 @@ function O(i) {
     o.src = i, o.async = !0, o.crossOrigin = "anonymous", o.onload = () => t(), o.onerror = (n) => e(n), document.head.appendChild(o);
   });
 }
-function W(i, t) {
+function R(i, t) {
   if (t)
     try {
       t(i, {
@@ -161,7 +161,7 @@ const q = class q extends HTMLElement {
   }
   // ── Lifecycle ───────────────────────────────────────────────────
   connectedCallback() {
-    G(), this.classList.add("canvasa-tutor", "tutor-root", "tutor-page"), j({ host: L(), tenant: this._tenant() });
+    G(), this.classList.add("canvasa-tutor", "tutor-root", "tutor-page"), B({ host: T(), tenant: this._tenant() });
     const t = this._readTabFromHash(), e = (() => {
       try {
         return window.sessionStorage.getItem("canvasa:active-tab") || "";
@@ -170,13 +170,13 @@ const q = class q extends HTMLElement {
       }
     })(), o = this.getAttribute("default-tab") || "ondemand", n = ["ondemand", "concepts", "problems"];
     this._tab = n.includes(t) ? t : n.includes(e) ? e : o, this._writeTabState(this._tab);
-    const r = this.getAttribute("lesson"), s = this.getAttribute("ask");
+    const r = this.getAttribute("lesson"), a = this.getAttribute("ask");
     if (r) {
-      const a = this.getAttribute("lesson-mode") || "teach";
-      this._launch("lesson", { lesson: r, mode: a });
-    } else if (s) {
-      const a = this.getAttribute("lesson-mode") || "teach";
-      this._launch("ask", { ask: s, mode: a });
+      const s = this.getAttribute("lesson-mode") || "teach";
+      this._launch("lesson", { lesson: r, mode: s });
+    } else if (a) {
+      const s = this.getAttribute("lesson-mode") || "teach";
+      this._launch("ask", { ask: a, mode: s });
     }
     this._render(), this._bootstrap();
   }
@@ -185,7 +185,7 @@ const q = class q extends HTMLElement {
     (t = this._abort) == null || t.abort();
   }
   attributeChangedCallback(t, e, o) {
-    !this.isConnected || e === o || (t === "tenant" ? (j({ tenant: this._tenant() }), this._bootstrap()) : t === "default-tab" && o ? (this._tab = o, this._render()) : this._render());
+    !this.isConnected || e === o || (t === "tenant" ? (B({ tenant: this._tenant() }), this._bootstrap()) : t === "default-tab" && o ? (this._tab = o, this._render()) : this._render());
   }
   // ── Programmatic API ────────────────────────────────────────────
   setTenant(t) {
@@ -262,8 +262,8 @@ const q = class q extends HTMLElement {
       fontMono: "--tutor-font-mono"
     };
     for (const [n, r] of Object.entries(t)) {
-      const s = e[n] ?? `--tutor-${n}`;
-      typeof r == "string" && this.style.setProperty(s, r);
+      const a = e[n] ?? `--tutor-${n}`;
+      typeof r == "string" && this.style.setProperty(a, r);
     }
   }
   // ── Render dispatch ─────────────────────────────────────────────
@@ -280,17 +280,17 @@ const q = class q extends HTMLElement {
   }
   _render() {
     var b, x, m, v, y, k;
-    const t = ((b = this._brand) == null ? void 0 : b.copy) ?? {}, e = this._slotText("hero-title") ?? t.heroTitle ?? "What do you want to <em>learn</em> today?", o = this._slotText("hero-sub") ?? t.heroSub ?? "Drop a question.", n = (this.getAttribute("hide-tabs") || "").split(",").map((l) => l.trim()).filter(Boolean), r = ["ondemand", "concepts", "problems"].filter((l) => !n.includes(l)), s = {
+    const t = ((b = this._brand) == null ? void 0 : b.copy) ?? {}, e = this._slotText("hero-title") ?? t.heroTitle ?? "What do you want to <em>learn</em> today?", o = this._slotText("hero-sub") ?? t.heroSub ?? "Drop a question.", n = (this.getAttribute("hide-tabs") || "").split(",").map((l) => l.trim()).filter(Boolean), r = ["ondemand", "concepts", "problems"].filter((l) => !n.includes(l)), a = {
       ondemand: ((x = t.tabs) == null ? void 0 : x.ondemand) ?? "On-demand",
       concepts: ((m = t.tabs) == null ? void 0 : m.concepts) ?? "Concept library",
       problems: ((v = t.tabs) == null ? void 0 : v.problems) ?? "Problems"
-    }, a = {
+    }, s = {
       ondemand: "5 ways",
       concepts: this._counts ? String(this._counts.concepts_total) : "",
       problems: this._counts ? String(this._counts.problems_total) : ""
-    }, c = ((y = this._brand) == null ? void 0 : y.canvas_a_version) || ((k = this._brand) == null ? void 0 : k.olympiz_version) || "", h = c ? `SDK ${S} · srv ${c}` : `SDK ${S}`;
+    }, d = ((y = this._brand) == null ? void 0 : y.canvas_a_version) || ((k = this._brand) == null ? void 0 : k.olympiz_version) || "", h = d ? `SDK ${$} · srv ${d}` : `SDK ${$}`;
     this.innerHTML = `
-      <div class="canvasa-tutor__pill" title="Canvas A SDK ${S}${c ? ` · canvas-a backend ${c}` : ""}">${p(h)}</div>
+      <div class="canvasa-tutor__pill" title="Canvas A SDK ${$}${d ? ` · canvas-a backend ${d}` : ""}">${p(h)}</div>
       <section class="tutor-hero">
         <h1>${e}</h1>
         <p>${p(o)}</p>
@@ -300,8 +300,8 @@ const q = class q extends HTMLElement {
           <button type="button" role="tab" aria-selected="${l === this._tab}"
                   data-canvasa-tab="${l}"
                   class="tutor-tab${l === this._tab ? " is-active" : ""}">
-            ${p(s[l])}
-            ${a[l] ? `<span class="tutor-tab__count">${p(a[l])}</span>` : ""}
+            ${p(a[l])}
+            ${s[l] ? `<span class="tutor-tab__count">${p(s[l])}</span>` : ""}
           </button>`).join("")}
       </nav>
       <div data-canvasa-tabpanel="${this._tab}" class="canvasa-tutor__panel"></div>
@@ -310,12 +310,12 @@ const q = class q extends HTMLElement {
       </div>
     `, this.querySelectorAll("[data-canvasa-tab]").forEach((l) => {
       l.addEventListener("click", () => {
-        const $ = l.dataset.canvasaTab;
-        this.setTab($);
+        const S = l.dataset.canvasaTab;
+        this.setTab(S);
       });
     }), this._injectPillStyle();
-    const d = this.querySelector(".canvasa-tutor__panel");
-    d && (this._tab === "ondemand" ? this._renderOnDemand(d) : this._tab === "concepts" ? this._renderConcepts(d) : this._tab === "problems" && this._renderProblems(d));
+    const c = this.querySelector(".canvasa-tutor__panel");
+    c && (this._tab === "ondemand" ? this._renderOnDemand(c) : this._tab === "concepts" ? this._renderConcepts(c) : this._tab === "problems" && this._renderProblems(c));
   }
   _injectPillStyle() {
     const t = "canvasa-tutor-pill-style";
@@ -360,8 +360,8 @@ const q = class q extends HTMLElement {
   }
   // ── On-demand tab ───────────────────────────────────────────────
   _renderOnDemand(t) {
-    var c, h;
-    const e = ((c = this._brand) == null ? void 0 : c.copy) ?? {}, o = e.placeholderTopic ?? "e.g. Bernoulli's principle · Lenz's law · Maxwell's equations", n = this._slotText("cta-label") ?? e.ctaLabel ?? "AI Tutor →";
+    var d, h;
+    const e = ((d = this._brand) == null ? void 0 : d.copy) ?? {}, o = e.placeholderTopic ?? "e.g. Bernoulli's principle · Lenz's law · Maxwell's equations", n = this._slotText("cta-label") ?? e.ctaLabel ?? "AI Tutor →";
     t.innerHTML = `
       <section class="tutor-section">
         <h2>Type a topic.</h2>
@@ -383,15 +383,15 @@ const q = class q extends HTMLElement {
     const r = t.querySelector("[data-canvasa-topic]");
     r && (r.addEventListener("input", () => {
       this._topic = r.value;
-      const d = t.querySelector("[data-canvasa-launch-topic]");
-      d && (d.disabled = this._busy || !this._topic.trim());
-    }), r.addEventListener("keydown", (d) => {
-      d.key === "Enter" && this._handleTopicGo();
+      const c = t.querySelector("[data-canvasa-launch-topic]");
+      c && (c.disabled = this._busy || !this._topic.trim());
+    }), r.addEventListener("keydown", (c) => {
+      c.key === "Enter" && this._handleTopicGo();
     })), (h = t.querySelector("[data-canvasa-launch-topic]")) == null || h.addEventListener("click", () => this._handleTopicGo());
-    const s = t.querySelector("[data-canvasa-source-picker]");
-    s && this._mountSourcePicker(s);
-    const a = t.querySelector("[data-canvasa-pdf-drop]");
-    a && this._mountPdfDrop(a);
+    const a = t.querySelector("[data-canvasa-source-picker]");
+    a && this._mountSourcePicker(a);
+    const s = t.querySelector("[data-canvasa-pdf-drop]");
+    s && this._mountPdfDrop(s);
   }
   _handleTopicGo() {
     const t = this._topic.trim();
@@ -402,25 +402,25 @@ const q = class q extends HTMLElement {
       composed: !0,
       cancelable: !0
     });
-    this.dispatchEvent(o) && (e === "teach" || e === "guide" ? this._dispatchLaunch({ slug: "", title: t, cached: !1, source: "ondemand", ask: t }, e) : this._openModePicker({ slug: "", title: t, cached: !1, source: "ondemand", ask: t }));
+    this.dispatchEvent(o) && (e === "teach" || e === "guide" ? this._dispatchLaunch({ slug: "", title: t, cached: !1, source: "ondemand", ask: t, level: "UG" }, e) : this._openModePicker({ slug: "", title: t, cached: !1, source: "ondemand", ask: t, level: "UG" }));
   }
   // Source picker — Internal wiki + External wiki, debounced search
   _mountSourcePicker(t) {
-    let e = "internal", o = "", n = [], r = !1, s = null;
-    const a = [
+    let e = "internal", o = "", n = [], r = !1, a = null;
+    const s = [
       { key: "internal", lbl: "Internal wiki", sub: "SuperStem Physics + AI + HS concept graphs" },
       { key: "external", lbl: "External wiki", sub: "Wikipedia — live" }
-    ], c = () => {
+    ], d = () => {
       t.innerHTML = `
         <h2>Or, point at a source.</h2>
         <div class="tutor-sources">
-          ${a.map((d) => `
-            <button type="button" class="tutor-source${e === d.key ? " is-active" : ""}" data-canvasa-src="${d.key}">
+          ${s.map((c) => `
+            <button type="button" class="tutor-source${e === c.key ? " is-active" : ""}" data-canvasa-src="${c.key}">
               <div class="tutor-source__row">
                 <span class="tutor-source__dot"></span>
                 <div>
-                  <div class="tutor-source__lbl">${p(d.lbl)}</div>
-                  <div class="tutor-source__sub">${p(d.sub)}</div>
+                  <div class="tutor-source__lbl">${p(c.lbl)}</div>
+                  <div class="tutor-source__sub">${p(c.sub)}</div>
                 </div>
               </div>
             </button>`).join("")}
@@ -430,47 +430,47 @@ const q = class q extends HTMLElement {
         ${r ? '<div class="tutor-status">Searching…</div>' : ""}
         ${n.length ? `
           <div class="tutor-results">
-            ${n.slice(0, 10).map((d) => `
-              <button type="button" class="tutor-result" data-canvasa-pick='${f(JSON.stringify({ url: d.url, title: d.title }))}'>
-                <div class="tutor-result__ttl">${p(d.title)}</div>
-                ${d.description || d.desc || d.snippet ? `<div class="tutor-result__desc">${p(d.description || d.desc || d.snippet || "")}</div>` : ""}
+            ${n.slice(0, 10).map((c) => `
+              <button type="button" class="tutor-result" data-canvasa-pick='${f(JSON.stringify({ url: c.url, title: c.title }))}'>
+                <div class="tutor-result__ttl">${p(c.title)}</div>
+                ${c.description || c.desc || c.snippet ? `<div class="tutor-result__desc">${p(c.description || c.desc || c.snippet || "")}</div>` : ""}
               </button>`).join("")}
           </div>` : ""}
         <div class="tutor-hint">
           Searches across SuperStem Physics Wiki (1400+ articles) · AI Wiki · HS Physics/Math/Chemistry concept graphs.
         </div>
-      `, t.querySelectorAll("[data-canvasa-src]").forEach((d) => {
-        d.addEventListener("click", () => {
-          e = d.dataset.canvasaSrc, c();
+      `, t.querySelectorAll("[data-canvasa-src]").forEach((c) => {
+        c.addEventListener("click", () => {
+          e = c.dataset.canvasaSrc, d();
         });
       });
       const h = t.querySelector("[data-canvasa-src-q]");
       h == null || h.addEventListener("input", () => {
-        if (o = h.value, s && clearTimeout(s), !o.trim()) {
-          n = [], c();
+        if (o = h.value, a && clearTimeout(a), !o.trim()) {
+          n = [], d();
           return;
         }
-        s = window.setTimeout(async () => {
-          r = !0, c();
+        a = window.setTimeout(async () => {
+          r = !0, d();
           try {
             n = (e === "external" ? await w.wikiSearch(o.trim()) : await w.superstemSearch(o.trim())).results || [];
           } catch {
             n = [];
           } finally {
-            r = !1, c();
+            r = !1, d();
           }
         }, 300);
-      }), t.querySelectorAll("[data-canvasa-pick]").forEach((d) => {
-        d.addEventListener("click", () => {
+      }), t.querySelectorAll("[data-canvasa-pick]").forEach((c) => {
+        c.addEventListener("click", () => {
           try {
-            const b = JSON.parse(d.dataset.canvasaPick || "{}");
+            const b = JSON.parse(c.dataset.canvasaPick || "{}");
             b.url && this._launchUrl(b.url, b.title);
           } catch {
           }
         });
       });
     };
-    c();
+    d();
   }
   _mountPdfDrop(t) {
     t.innerHTML = `
@@ -487,9 +487,9 @@ const q = class q extends HTMLElement {
     }), o == null || o.addEventListener("dragover", (n) => {
       n.preventDefault(), o.classList.add("is-drag");
     }), o == null || o.addEventListener("dragleave", () => o.classList.remove("is-drag")), o == null || o.addEventListener("drop", (n) => {
-      var s, a;
+      var a, s;
       n.preventDefault(), o.classList.remove("is-drag");
-      const r = (a = (s = n.dataTransfer) == null ? void 0 : s.files) == null ? void 0 : a[0];
+      const r = (s = (a = n.dataTransfer) == null ? void 0 : a.files) == null ? void 0 : s[0];
       r && r.type === "application/pdf" && this._launchPdf(r);
     });
   }
@@ -502,17 +502,17 @@ const q = class q extends HTMLElement {
         <input type="text" class="tutor-input tutor-input--sm" data-canvasa-concept-q
                value="${f(this._conceptQuery)}" placeholder="Search concepts…">
         <div class="tutor-chip-group" data-canvasa-concept-chips>
-          ${["all", "HS", "UG", "G"].map((a) => `
-            <button type="button" class="tutor-chip${this._conceptLevel === a ? " is-active" : ""}" data-canvasa-clvl="${a}">${a === "all" ? "All" : a}</button>`).join("")}
+          ${["all", "HS", "UG", "G"].map((s) => `
+            <button type="button" class="tutor-chip${this._conceptLevel === s ? " is-active" : ""}" data-canvasa-clvl="${s}">${s === "all" ? "All" : s}</button>`).join("")}
         </div>
       </div>
       <div data-canvasa-concept-topics></div>
     </section>`;
     const e = t.querySelector("[data-canvasa-concepts-sub]"), o = t.querySelector("[data-canvasa-concept-topics]");
     if (!e || !o) return;
-    t.querySelectorAll("[data-canvasa-clvl]").forEach((a) => {
-      a.addEventListener("click", () => {
-        this._conceptLevel = a.dataset.canvasaClvl, t.querySelectorAll("[data-canvasa-clvl]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaClvl === this._conceptLevel)), this._topicSectionCache.clear(), this._pageState.clear(), this._rerenderConceptTopics(o);
+    t.querySelectorAll("[data-canvasa-clvl]").forEach((s) => {
+      s.addEventListener("click", () => {
+        this._conceptLevel = s.dataset.canvasaClvl, t.querySelectorAll("[data-canvasa-clvl]").forEach((d) => d.classList.toggle("is-active", d.dataset.canvasaClvl === this._conceptLevel)), this._topicSectionCache.clear(), this._pageState.clear(), this._rerenderConceptTopics(o);
       });
     });
     let n = null;
@@ -523,14 +523,14 @@ const q = class q extends HTMLElement {
       }, 220);
     }), !this._topicHeaders.length)
       try {
-        const a = await w.libraryTopicHeaders();
-        this._topicHeaders = a.topics || [];
-      } catch (a) {
-        e.textContent = "Failed to load: " + String(a), this._fireError("library-topics-failed", String(a), a);
+        const s = await w.libraryTopicHeaders();
+        this._topicHeaders = s.topics || [];
+      } catch (s) {
+        e.textContent = "Failed to load: " + String(s), this._fireError("library-topics-failed", String(s), s);
         return;
       }
-    const s = this._topicHeaders.reduce((a, c) => a + (c.count || 0), 0);
-    e.textContent = `${s.toLocaleString()} lessons across ${this._topicHeaders.length} topics — click a section to expand.`, this._rerenderConceptTopics(o);
+    const a = this._topicHeaders.reduce((s, d) => s + (d.count || 0), 0);
+    e.textContent = `${a.toLocaleString()} lessons across ${this._topicHeaders.length} topics — click a section to expand.`, this._rerenderConceptTopics(o);
   }
   _conceptLevelCount(t) {
     switch (this._conceptLevel) {
@@ -546,27 +546,27 @@ const q = class q extends HTMLElement {
   }
   _rerenderConceptTopics(t) {
     const e = this._conceptLevel, o = this._conceptQuery.trim(), n = e !== "all" || !!o;
-    t.innerHTML = this._topicHeaders.map((r, s) => {
-      const a = this._conceptLevelCount(r), c = this._expanded.get("c:" + s) ?? s === 0, h = o ? `${r.count} lessons · search active` : `${a} lesson${a === 1 ? "" : "s"}${n ? ` of ${r.count}` : ""}`, d = e !== "all" && a === 0 && !o;
+    t.innerHTML = this._topicHeaders.map((r, a) => {
+      const s = this._conceptLevelCount(r), d = this._expanded.get("c:" + a) ?? a === 0, h = o ? `${r.count} lessons · search active` : `${s} lesson${s === 1 ? "" : "s"}${n ? ` of ${r.count}` : ""}`, c = e !== "all" && s === 0 && !o;
       return `
-        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-ctopic="${s}" data-canvasa-cname="${f(r.name)}" style="${d ? "display:none;" : ""}">
-          <div class="tutor-topic__head" data-canvasa-ctoggle="${s}">
+        <div class="tutor-topic${d ? " is-expanded" : ""}" data-canvasa-ctopic="${a}" data-canvasa-cname="${f(r.name)}" style="${c ? "display:none;" : ""}">
+          <div class="tutor-topic__head" data-canvasa-ctoggle="${a}">
             <span class="tutor-topic__icon">${p(r.icon || "📘")}</span>
             <span class="tutor-topic__name">${p(r.name)}</span>
             <span class="tutor-topic__count">${p(h)}</span>
             <span class="tutor-topic__chev">▶</span>
           </div>
-          <div class="tutor-topic__body" data-canvasa-ctopic-body="${s}" data-rendered="0"></div>
+          <div class="tutor-topic__body" data-canvasa-ctopic-body="${a}" data-rendered="0"></div>
         </div>`;
     }).join(""), t.querySelectorAll("[data-canvasa-ctoggle]").forEach((r) => {
       r.addEventListener("click", () => {
-        const s = +(r.dataset.canvasaCtoggle || "0"), a = t.querySelector(`[data-canvasa-ctopic="${s}"]`);
-        if (!a) return;
-        const c = !a.classList.contains("is-expanded");
-        a.classList.toggle("is-expanded", c), this._expanded.set("c:" + s, c), c && this._renderConceptTopicBody(t, s, 0);
+        const a = +(r.dataset.canvasaCtoggle || "0"), s = t.querySelector(`[data-canvasa-ctopic="${a}"]`);
+        if (!s) return;
+        const d = !s.classList.contains("is-expanded");
+        s.classList.toggle("is-expanded", d), this._expanded.set("c:" + a, d), d && this._renderConceptTopicBody(t, a, 0);
       });
-    }), this._topicHeaders.forEach((r, s) => {
-      (this._expanded.get("c:" + s) ?? s === 0) && this._renderConceptTopicBody(t, s, this._pageState.get("c:" + s) ?? 0);
+    }), this._topicHeaders.forEach((r, a) => {
+      (this._expanded.get("c:" + a) ?? a === 0) && this._renderConceptTopicBody(t, a, this._pageState.get("c:" + a) ?? 0);
     });
   }
   async _renderConceptTopicBody(t, e, o) {
@@ -575,15 +575,15 @@ const q = class q extends HTMLElement {
     if (!n) return;
     const r = t.querySelector(`[data-canvasa-ctopic-body="${e}"]`);
     if (!r) return;
-    const s = this._conceptLevel, a = this._conceptQuery.trim(), c = n.name, h = Math.max(0, o * g), d = this._topicSectionCache.get(c), b = d && d.level === s && d.q === a && d.offset === h && d.limit === g;
+    const a = this._conceptLevel, s = this._conceptQuery.trim(), d = n.name, h = Math.max(0, o * g), c = this._topicSectionCache.get(d), b = c && c.level === a && c.q === s && c.offset === h && c.limit === g;
     let x, m;
-    if (b && d)
-      x = d.lessons, m = d.total;
+    if (b && c)
+      x = c.lessons, m = c.total;
     else {
       r.innerHTML = '<div class="tutor-empty">Loading…</div>', r.dataset.rendered = "0";
       try {
-        const l = await w.libraryTopicSection(n.name, h, g, s, a);
-        x = l.lessons || [], m = l.total || 0, this._topicSectionCache.set(c, { lessons: x, total: m, offset: h, limit: g, level: s, q: a });
+        const l = await w.libraryTopicSection(n.name, h, g, a, s);
+        x = l.lessons || [], m = l.total || 0, this._topicSectionCache.set(d, { lessons: x, total: m, offset: h, limit: g, level: a, q: s });
       } catch (l) {
         r.innerHTML = `<div class="tutor-empty">Failed to load: ${p(String(l))}</div>`, this._fireError("library-topic-section-failed", String(l), l);
         return;
@@ -593,11 +593,11 @@ const q = class q extends HTMLElement {
     o < 0 && (o = 0), o >= v && (o = v - 1), this._pageState.set("c:" + e, o), r.innerHTML = `
       <div class="tutor-card-grid">
         ${x.map((l) => {
-      const $ = l.level || "HS";
-      return `<button type="button" class="tutor-card" data-canvasa-lesson="${f(l.slug)}" data-canvasa-cached="${l.cached ? "1" : "0"}" data-canvasa-guide-cached="${l.guide_cached ? "1" : "0"}" data-canvasa-title="${f(l.title)}" data-canvasa-source="concept">
+      const S = l.level || "HS";
+      return `<button type="button" class="tutor-card" data-canvasa-lesson="${f(l.slug)}" data-canvasa-cached="${l.cached ? "1" : "0"}" data-canvasa-guide-cached="${l.guide_cached ? "1" : "0"}" data-canvasa-level="${f(S)}" data-canvasa-title="${f(l.title)}" data-canvasa-source="concept">
             <div class="tutor-card__title">${p(l.title)}</div>
             <div class="tutor-card__meta">
-              <span>${p($)}</span>
+              <span>${p(S)}</span>
               ${l.cached ? '<span class="tutor-card__cached">✓ cached</span>' : ""}
               ${l.guide_cached ? '<span class="tutor-card__guide">⚡ guide</span>' : ""}
             </div>
@@ -621,6 +621,7 @@ const q = class q extends HTMLElement {
           title: l.dataset.canvasaTitle || "",
           cached: l.dataset.canvasaCached === "1",
           guideCached: l.dataset.canvasaGuideCached === "1",
+          level: l.dataset.canvasaLevel || "",
           source: "concept"
         });
       });
@@ -635,17 +636,17 @@ const q = class q extends HTMLElement {
         <input type="text" class="tutor-input tutor-input--sm" data-canvasa-prob-q
                value="${f(this._probQuery)}" placeholder="Search problems…">
         <div class="tutor-chip-group" data-canvasa-prob-chips>
-          ${["all", "HS", "UG", "G", "Olympiad", "cached"].map((a) => `
-            <button type="button" class="tutor-chip${this._probChip === a ? " is-active" : ""}" data-canvasa-pchip="${a}">${a === "all" ? "All" : a === "cached" ? "✓" : a}</button>`).join("")}
+          ${["all", "HS", "UG", "G", "Olympiad", "cached"].map((s) => `
+            <button type="button" class="tutor-chip${this._probChip === s ? " is-active" : ""}" data-canvasa-pchip="${s}">${s === "all" ? "All" : s === "cached" ? "✓" : s}</button>`).join("")}
         </div>
       </div>
       <div data-canvasa-problem-sections></div>
     </section>`;
     const e = t.querySelector("[data-canvasa-problems-sub]"), o = t.querySelector("[data-canvasa-problem-sections]");
     if (!e || !o) return;
-    t.querySelectorAll("[data-canvasa-pchip]").forEach((a) => {
-      a.addEventListener("click", () => {
-        this._probChip = a.dataset.canvasaPchip, t.querySelectorAll("[data-canvasa-pchip]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaPchip === this._probChip)), this._problemSectionCache.clear(), this._pageState.clear(), this._rerenderProblemSections(o);
+    t.querySelectorAll("[data-canvasa-pchip]").forEach((s) => {
+      s.addEventListener("click", () => {
+        this._probChip = s.dataset.canvasaPchip, t.querySelectorAll("[data-canvasa-pchip]").forEach((d) => d.classList.toggle("is-active", d.dataset.canvasaPchip === this._probChip)), this._problemSectionCache.clear(), this._pageState.clear(), this._rerenderProblemSections(o);
       });
     });
     let n = null;
@@ -656,14 +657,14 @@ const q = class q extends HTMLElement {
       }, 220);
     }), !this._problemHeaders.length)
       try {
-        const a = await w.problemsLibraryHeaders();
-        this._problemHeaders = a.sections || [];
-      } catch (a) {
-        e.textContent = "Failed to load: " + String(a), this._fireError("problems-library-failed", String(a), a);
+        const s = await w.problemsLibraryHeaders();
+        this._problemHeaders = s.sections || [];
+      } catch (s) {
+        e.textContent = "Failed to load: " + String(s), this._fireError("problems-library-failed", String(s), s);
         return;
       }
-    const s = this._problemHeaders.reduce((a, c) => a + (c.count || 0), 0);
-    e.textContent = `${s.toLocaleString()} problems across ${this._problemHeaders.length} sections — click a section to expand.`, this._rerenderProblemSections(o);
+    const a = this._problemHeaders.reduce((s, d) => s + (d.count || 0), 0);
+    e.textContent = `${a.toLocaleString()} problems across ${this._problemHeaders.length} sections — click a section to expand.`, this._rerenderProblemSections(o);
   }
   _probChipToLevel() {
     switch (this._probChip) {
@@ -697,44 +698,44 @@ const q = class q extends HTMLElement {
   }
   _rerenderProblemSections(t) {
     const e = this._probChip, o = this._probQuery.trim(), n = e !== "all" || !!o;
-    t.innerHTML = this._problemHeaders.map((r, s) => {
-      const a = this._problemChipCount(r), c = this._expanded.get("p:" + s) ?? s === 0, h = o ? `${r.count} problems · search active` : `${a} problem${a === 1 ? "" : "s"}${n ? ` of ${r.count}` : ""}`, d = e !== "all" && a === 0 && !o;
+    t.innerHTML = this._problemHeaders.map((r, a) => {
+      const s = this._problemChipCount(r), d = this._expanded.get("p:" + a) ?? a === 0, h = o ? `${r.count} problems · search active` : `${s} problem${s === 1 ? "" : "s"}${n ? ` of ${r.count}` : ""}`, c = e !== "all" && s === 0 && !o;
       return `
-        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-psec="${s}" data-canvasa-pname="${f(r.name)}" style="${d ? "display:none;" : ""}">
-          <div class="tutor-topic__head" data-canvasa-ptoggle="${s}">
+        <div class="tutor-topic${d ? " is-expanded" : ""}" data-canvasa-psec="${a}" data-canvasa-pname="${f(r.name)}" style="${c ? "display:none;" : ""}">
+          <div class="tutor-topic__head" data-canvasa-ptoggle="${a}">
             <span class="tutor-topic__icon">${p(r.icon || "📘")}</span>
             <span class="tutor-topic__name">${p(r.name)}</span>
             <span class="tutor-topic__count">${p(h)}</span>
             <span class="tutor-topic__chev">▶</span>
           </div>
-          <div class="tutor-topic__body" data-canvasa-psec-body="${s}" data-rendered="0"></div>
+          <div class="tutor-topic__body" data-canvasa-psec-body="${a}" data-rendered="0"></div>
         </div>`;
     }).join(""), t.querySelectorAll("[data-canvasa-ptoggle]").forEach((r) => {
       r.addEventListener("click", () => {
-        const s = +(r.dataset.canvasaPtoggle || "0"), a = t.querySelector(`[data-canvasa-psec="${s}"]`);
-        if (!a) return;
-        const c = !a.classList.contains("is-expanded");
-        a.classList.toggle("is-expanded", c), this._expanded.set("p:" + s, c), c && this._renderProblemSectionBody(t, s, 0);
+        const a = +(r.dataset.canvasaPtoggle || "0"), s = t.querySelector(`[data-canvasa-psec="${a}"]`);
+        if (!s) return;
+        const d = !s.classList.contains("is-expanded");
+        s.classList.toggle("is-expanded", d), this._expanded.set("p:" + a, d), d && this._renderProblemSectionBody(t, a, 0);
       });
-    }), this._problemHeaders.forEach((r, s) => {
-      (this._expanded.get("p:" + s) ?? s === 0) && this._renderProblemSectionBody(t, s, this._pageState.get("p:" + s) ?? 0);
+    }), this._problemHeaders.forEach((r, a) => {
+      (this._expanded.get("p:" + a) ?? a === 0) && this._renderProblemSectionBody(t, a, this._pageState.get("p:" + a) ?? 0);
     });
   }
   async _renderProblemSectionBody(t, e, o) {
-    var l, $;
+    var l, S;
     const n = this._problemHeaders[e];
     if (!n) return;
     const r = t.querySelector(`[data-canvasa-psec-body="${e}"]`);
     if (!r) return;
-    const s = this._probChip, a = this._probChipToLevel(), c = this._probQuery.trim(), h = n.name, d = Math.max(0, o * g), b = this._problemSectionCache.get(h), x = b && b.chip === s && b.q === c && b.offset === d && b.limit === g;
+    const a = this._probChip, s = this._probChipToLevel(), d = this._probQuery.trim(), h = n.name, c = Math.max(0, o * g), b = this._problemSectionCache.get(h), x = b && b.chip === a && b.q === d && b.offset === c && b.limit === g;
     let m, v;
     if (x && b)
       m = b.problems, v = b.total;
     else {
       r.innerHTML = '<div class="tutor-empty">Loading…</div>', r.dataset.rendered = "0";
       try {
-        const u = await w.problemsLibrarySection(n.name, d, g, a, c);
-        m = u.problems || [], v = u.total || 0, this._problemSectionCache.set(h, { problems: m, total: v, offset: d, limit: g, chip: s, q: c });
+        const u = await w.problemsLibrarySection(n.name, c, g, s, d);
+        m = u.problems || [], v = u.total || 0, this._problemSectionCache.set(h, { problems: m, total: v, offset: c, limit: g, chip: a, q: d });
       } catch (u) {
         r.innerHTML = `<div class="tutor-empty">Failed to load: ${p(String(u))}</div>`, this._fireError("problems-library-section-failed", String(u), u);
         return;
@@ -744,12 +745,12 @@ const q = class q extends HTMLElement {
     o < 0 && (o = 0), o >= y && (o = y - 1), this._pageState.set("p:" + e, o), r.innerHTML = `
       <div class="tutor-prob-list">
         ${m.map((u) => {
-      const F = u.level || "UG", z = u.difficulty || "medium";
-      return `<button type="button" class="tutor-prob" data-canvasa-lesson="${f(u.slug)}" data-canvasa-cached="${u.cached ? "1" : "0"}" data-canvasa-guide-cached="${u.guide_cached ? "1" : "0"}" data-canvasa-title="${f(u.title)}" data-canvasa-source="problem" data-canvasa-statement="${f(u.statement || "")}">
+      const z = u.level || "UG", j = u.difficulty || "medium";
+      return `<button type="button" class="tutor-prob" data-canvasa-lesson="${f(u.slug)}" data-canvasa-cached="${u.cached ? "1" : "0"}" data-canvasa-guide-cached="${u.guide_cached ? "1" : "0"}" data-canvasa-level="${f(z)}" data-canvasa-title="${f(u.title)}" data-canvasa-source="problem" data-canvasa-statement="${f(u.statement || "")}">
             <div class="tutor-prob__head">
               <span class="tutor-prob__title">${p(u.title)}</span>
-              <span class="tutor-pill tutor-pill--${f(z)}">${p(z)}</span>
-              <span class="tutor-pill">${p(F)}</span>
+              <span class="tutor-pill tutor-pill--${f(j)}">${p(j)}</span>
+              <span class="tutor-pill">${p(z)}</span>
               ${u.source ? `<span class="tutor-prob__src">· ${p(u.source)}</span>` : ""}
               ${u.cached ? '<span class="tutor-prob__cached" title="Cached — instant load">✓</span>' : ""}
               ${u.guide_cached ? '<span class="tutor-prob__guide" title="Figure-It-Out cached">⚡</span>' : ""}
@@ -766,7 +767,7 @@ const q = class q extends HTMLElement {
         </div>` : v === 0 ? '<div class="tutor-empty">No matches in this section.</div>' : ""}
     `, r.dataset.rendered = "1", (l = r.querySelector("[data-canvasa-ppag-prev]")) == null || l.addEventListener("click", (u) => {
       u.stopPropagation(), this._renderProblemSectionBody(t, e, o - 1);
-    }), ($ = r.querySelector("[data-canvasa-ppag-next]")) == null || $.addEventListener("click", (u) => {
+    }), (S = r.querySelector("[data-canvasa-ppag-next]")) == null || S.addEventListener("click", (u) => {
       u.stopPropagation(), this._renderProblemSectionBody(t, e, o + 1);
     }), r.querySelectorAll("[data-canvasa-lesson]").forEach((u) => {
       u.addEventListener("click", () => {
@@ -775,13 +776,14 @@ const q = class q extends HTMLElement {
           title: u.dataset.canvasaTitle || "",
           cached: u.dataset.canvasaCached === "1",
           guideCached: u.dataset.canvasaGuideCached === "1",
+          level: u.dataset.canvasaLevel || "",
           source: "problem",
           statement: u.dataset.canvasaStatement || ""
         });
       });
     });
     const k = await N(this.getAttribute("katex-cdn"));
-    W(r, k);
+    R(r, k);
   }
   // ── Lesson card click → mode picker → launch ────────────────────
   _handleLessonCardClick(t) {
@@ -808,61 +810,67 @@ const q = class q extends HTMLElement {
    *                          with no audio). Surface this fallback via the
    *                          canvasa-error event so hosts can notify.
    *
-   * Without these checks: uncached problems 404 on /tutor?lesson=<slug>,
-   * AND /guide?ask=… serves a broken empty shell.
+   * v0.1.0-alpha.11: Guide-Me now works universally. Backend (v2.12) live-builds
+   * Mode 2 skeletons on /guide?ask=&level= so we no longer hide Guide-Me for
+   * uncached items.
    */
   _dispatchLaunch(t, e) {
-    if (e === "guide" && !t.guideCached && (this._fireError(
-      "guide-not-cached",
-      "Figure-It-Out (Guide-Me) is not available for this item — server has no pre-built skeleton. Falling back to Walk-Me-Through.",
-      { slug: t.slug, title: t.title }
-    ), e = "teach"), e === "guide" && t.slug && t.guideCached) {
-      this._launch("lesson", { lesson: t.slug, mode: "guide", statement: t.statement ?? "" });
+    const o = (t.level || "").trim();
+    if (e === "guide") {
+      if (t.slug && t.guideCached) {
+        this._launch("lesson", { lesson: t.slug, mode: "guide", statement: t.statement ?? "", level: o });
+        return;
+      }
+      const r = (t.ask || t.statement || t.title || "").trim();
+      if (r) {
+        this._launch("ask", { ask: r, mode: "guide", level: o });
+        return;
+      }
+      if (t.slug) {
+        this._launch("lesson", { lesson: t.slug, mode: "guide", level: o });
+        return;
+      }
+    }
+    if (t.cached && t.slug) {
+      this._launch("lesson", { lesson: t.slug, mode: "teach", statement: t.statement ?? "", level: o });
       return;
     }
-    if (e === "teach" && t.cached && t.slug) {
-      this._launch("lesson", { lesson: t.slug, mode: "teach", statement: t.statement ?? "" });
-      return;
-    }
-    const o = (t.ask || t.statement || t.title || "").trim();
-    o ? this._launch("ask", { ask: o, mode: "teach" }) : t.slug && this._launch("lesson", { lesson: t.slug, mode: "teach" });
+    const n = (t.ask || t.statement || t.title || "").trim();
+    n ? this._launch("ask", { ask: n, mode: "teach", level: o }) : t.slug && this._launch("lesson", { lesson: t.slug, mode: "teach", level: o });
   }
   _openModePicker(t) {
-    var a;
-    const e = !!t.guideCached, o = document.createElement("div");
-    o.className = "tutor-mode-modal";
-    const n = e ? "Two ways to learn this — pick what suits you." : "One mode available for this item — Walk-Me-Through (live-built). The Figure-It-Out mode requires a pre-built skeleton, which this item does not yet have.";
-    o.innerHTML = `
+    var r;
+    const e = document.createElement("div");
+    e.className = "tutor-mode-modal", e.innerHTML = `
       <div class="tutor-mode-modal__card" role="dialog" aria-label="Pick a learning mode">
         <h3 class="tutor-mode-modal__title">${p(t.title || "Pick a learning mode")}</h3>
-        <p class="tutor-mode-modal__sub">${p(n)}</p>
+        <p class="tutor-mode-modal__sub">Two ways to learn this — pick what suits you.</p>
         <div class="tutor-mode-modal__opts">
           <button type="button" class="tutor-mode-modal__opt" data-mode="teach">
             <div class="tutor-mode-modal__opt__title">Walk me through it (Teach-me)</div>
             <div class="tutor-mode-modal__opt__desc">Linear lesson with synthesized audio + chalkboard visuals.</div>
           </button>
-          ${e ? `
           <button type="button" class="tutor-mode-modal__opt" data-mode="guide">
             <div class="tutor-mode-modal__opt__title">Guide me to figure it out</div>
             <div class="tutor-mode-modal__opt__desc">Socratic checkpoints + hints. You drive; the tutor scaffolds.</div>
-          </button>` : ""}
+          </button>
         </div>
         <button type="button" class="tutor-mode-modal__close" data-cancel>Cancel</button>
       </div>
-    `, document.body.appendChild(o);
-    const r = () => o.remove();
-    o.addEventListener("click", (c) => {
-      c.target === o && r();
-    }), (a = o.querySelector("[data-cancel]")) == null || a.addEventListener("click", r), o.querySelectorAll("[data-mode]").forEach((c) => {
-      c.addEventListener("click", () => {
-        const h = c.dataset.mode || "teach";
-        r(), this._dispatchLaunch(t, h === "guide" ? "guide" : "teach");
+    `, document.body.appendChild(e);
+    const o = () => e.remove();
+    e.addEventListener("click", (a) => {
+      a.target === e && o();
+    }), (r = e.querySelector("[data-cancel]")) == null || r.addEventListener("click", o), e.querySelectorAll("[data-mode]").forEach((a) => {
+      a.addEventListener("click", () => {
+        const s = a.dataset.mode || "teach";
+        o(), this._dispatchLaunch(t, s === "guide" ? "guide" : "teach");
       });
     });
-    const s = (c) => {
-      c.key === "Escape" && (r(), document.removeEventListener("keydown", s));
+    const n = (a) => {
+      a.key === "Escape" && (o(), document.removeEventListener("keydown", n));
     };
-    document.addEventListener("keydown", s);
+    document.addEventListener("keydown", n);
   }
   // ── Launch (redirect to /tutor or /guide) ───────────────────────
   _launch(t, e) {
@@ -873,23 +881,23 @@ const q = class q extends HTMLElement {
       cancelable: !0
     });
     if (!this.dispatchEvent(o)) return;
-    const r = (e.mode === "guide" ? "guide" : "tutor") === "guide" ? "/guide" : "/tutor", s = new URLSearchParams();
-    if (e.lesson && s.set("lesson", e.lesson), e.ask && s.set("ask", e.ask), s.set("brand", this._tenant()), typeof window < "u" && window.location) {
-      s.set("return", window.location.href);
-      const a = `${L()}${r}?${s.toString()}`, c = this.getAttribute("lesson-target") || "self";
-      if (c === "blank")
-        window.open(a, "_blank", "noopener");
-      else if (c.startsWith(".") || c.startsWith("#")) {
-        const h = document.querySelector(c);
-        h && "src" in h && (h.src = a);
+    const r = (e.mode === "guide" ? "guide" : "tutor") === "guide" ? "/guide" : "/tutor", a = new URLSearchParams();
+    if (e.lesson && a.set("lesson", e.lesson), e.ask && a.set("ask", e.ask), a.set("brand", this._tenant()), e.level && a.set("level", e.level), typeof window < "u" && window.location) {
+      a.set("return", window.location.href);
+      const s = `${T()}${r}?${a.toString()}`, d = this.getAttribute("lesson-target") || "self";
+      if (d === "blank")
+        window.open(s, "_blank", "noopener");
+      else if (d.startsWith(".") || d.startsWith("#")) {
+        const h = document.querySelector(d);
+        h && "src" in h && (h.src = s);
       } else
-        window.location.assign(a);
+        window.location.assign(s);
     }
   }
   _launchUrl(t, e) {
     this._busy = !0, this._busyMsg = "Opening tutor…", this._render();
     const o = new URLSearchParams();
-    o.set("ask", e && e.trim() || t), o.set("brand", this._tenant()), typeof window < "u" && window.location && o.set("return", window.location.href), window.location.assign(`${L()}/tutor?${o.toString()}`);
+    o.set("ask", e && e.trim() || t), o.set("brand", this._tenant()), typeof window < "u" && window.location && o.set("return", window.location.href), window.location.assign(`${T()}/tutor?${o.toString()}`);
   }
   async _launchPdf(t) {
     this._busy = !0, this._busyMsg = "Reading PDF…", this._errorMsg = "", this._render();
@@ -910,7 +918,7 @@ const q = class q extends HTMLElement {
   }
   _markReady() {
     this._ready || (this._ready = !0, this.dispatchEvent(new CustomEvent("canvasa-ready", {
-      detail: { version: S, tenant: this._tenant() },
+      detail: { version: $, tenant: this._tenant() },
       bubbles: !0,
       composed: !0
     })), this._debug() && console.log("[canvasa] ready", { tenant: this._tenant(), brand: this._brand, counts: this._counts }));
@@ -937,7 +945,7 @@ q.observedAttributes = [
   "debug"
 ];
 let A = q;
-function R() {
+function W() {
   typeof window > "u" || window.customElements.get("canvasa-tutor") || window.customElements.define("canvasa-tutor", A);
 }
 const V = "https://canvasa.olympiz.ai", K = "default";
@@ -962,8 +970,8 @@ class Q extends HTMLElement {
     return this._buildUrl();
   }
   _buildUrl() {
-    const t = (this.getAttribute("host") || V).replace(/\/$/, ""), o = (this.getAttribute("mode") || "teach").toLowerCase() === "guide" ? "/guide" : "/tutor", n = (this.getAttribute("lesson") || "").trim(), r = (this.getAttribute("tenant") || K).trim(), s = (this.getAttribute("return-url") || "").trim(), a = new URLSearchParams();
-    return n && a.set("lesson", n), a.set("brand", r), s && a.set("return", s), `${t}${o}?${a.toString()}`;
+    const t = (this.getAttribute("host") || V).replace(/\/$/, ""), o = (this.getAttribute("mode") || "teach").toLowerCase() === "guide" ? "/guide" : "/tutor", n = (this.getAttribute("lesson") || "").trim(), r = (this.getAttribute("tenant") || K).trim(), a = (this.getAttribute("return-url") || "").trim(), s = new URLSearchParams();
+    return n && s.set("lesson", n), s.set("brand", r), a && s.set("return", a), `${t}${o}?${s.toString()}`;
   }
   _render() {
     const t = (this.getAttribute("lesson") || "").trim();
@@ -982,7 +990,7 @@ class Q extends HTMLElement {
       this._ready = !0, this.dispatchEvent(new CustomEvent("canvasa-ready", {
         bubbles: !0,
         composed: !0,
-        detail: { version: S, lesson: t, mode: this.getAttribute("mode") || "teach" }
+        detail: { version: $, lesson: t, mode: this.getAttribute("mode") || "teach" }
       }));
     }), o.addEventListener("error", () => {
       this.dispatchEvent(new CustomEvent("canvasa-error", {
@@ -1029,7 +1037,7 @@ class H extends HTMLElement {
         bubbles: !0,
         composed: !0,
         detail: {
-          version: S,
+          version: $,
           status: "stub",
           capability: this._stubMeta().capability,
           plannedVersion: this._stubMeta().plannedVersion
@@ -1056,8 +1064,8 @@ class H extends HTMLElement {
     n.style.cssText = "font-size:20px; font-weight:600; margin-bottom:6px; color:var(--tutor-accent, currentColor);", n.textContent = `Coming in ${t.plannedVersion}`, e.appendChild(n);
     const r = document.createElement("div");
     if (r.style.cssText = "opacity:0.85; max-width:60ch;", r.textContent = t.description, e.appendChild(r), t.docsHref) {
-      const s = document.createElement("a");
-      s.href = t.docsHref, s.target = "_blank", s.rel = "noopener", s.textContent = "Read the contract →", s.style.cssText = "display:inline-block; margin-top:14px; color:var(--tutor-accent, #f6d77a); text-decoration:none; font-size:13px;", e.appendChild(s);
+      const a = document.createElement("a");
+      a.href = t.docsHref, a.target = "_blank", a.rel = "noopener", a.textContent = "Read the contract →", a.style.cssText = "display:inline-block; margin-top:14px; color:var(--tutor-accent, #f6d77a); text-decoration:none; font-size:13px;", e.appendChild(a);
     }
     this.appendChild(e);
   }
@@ -1104,10 +1112,10 @@ class Y extends H {
   }
 }
 typeof customElements < "u" && !customElements.get("canvasa-coach-chat") && customElements.define("canvasa-coach-chat", Y);
-R();
-typeof window < "u" && (window.canvasa = window.canvasa ?? { version: S });
+W();
+typeof window < "u" && (window.canvasa = window.canvasa ?? { version: $ });
 export {
-  S as CANVASA_SDK_VERSION,
+  $ as CANVASA_SDK_VERSION,
   Q as CanvasaChalkboardElement,
   Y as CanvasaCoachChatElement,
   J as CanvasaProblemWalkerElement,
