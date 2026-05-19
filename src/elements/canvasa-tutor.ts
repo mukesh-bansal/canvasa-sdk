@@ -24,8 +24,8 @@
 import { CANVASA_SDK_VERSION } from '../version'
 import { canvasaApi, setApiConfig } from '../services/api'
 import type {
-  Topic, Problem, ProblemSection, InventoryCounts,
-  LibraryTopicsResponse, ProblemsLibraryResponse,
+  Lesson, Problem, InventoryCounts,
+  LibraryTopicHeader, ProblemsLibraryHeader,
   WikiSearchResult,
 } from '../services/types'
 import tutorCss from '../styles/tutor.css?inline'
@@ -192,8 +192,21 @@ export class CanvasaTutorElement extends HTMLElement {
   private _conceptLevel: ConceptLevel = 'all'
   private _probQuery = ''
   private _probChip: ProbChip = 'all'
-  private _topicsData: Topic[] = []
-  private _problemsData: ProblemSection[] = []
+  // Phase 8: header-only data + lazily-fetched per-section caches.
+  // _topicHeaders is fetched once on Concept-library tab mount (~1 KB).
+  // _topicSectionCache holds [name] -> last fetched page for that section.
+  // When level/query filters change, the per-section cache is cleared so
+  // the next render re-fetches from the server with the new filter args.
+  private _topicHeaders: LibraryTopicHeader[] = []
+  private _topicSectionCache: Map<string, {
+    lessons: Lesson[]; total: number; offset: number; limit: number;
+    level: ConceptLevel; q: string;
+  }> = new Map()
+  private _problemHeaders: ProblemsLibraryHeader[] = []
+  private _problemSectionCache: Map<string, {
+    problems: Problem[]; total: number; offset: number; limit: number;
+    chip: ProbChip; q: string;
+  }> = new Map()
   private _counts: InventoryCounts | null = null
   private _busy = false
   private _busyMsg = ''
@@ -586,60 +599,78 @@ export class CanvasaTutorElement extends HTMLElement {
     const wrap = panel.querySelector<HTMLElement>('[data-canvasa-concept-topics]')
     if (!sub || !wrap) return
 
-    // Filter chips
+    // Filter chips — Phase 8: clear section cache so next render re-fetches
+    // from server with the new level param. Header counts stay (server-provided).
     panel.querySelectorAll<HTMLButtonElement>('[data-canvasa-clvl]').forEach((b) => {
       b.addEventListener('click', () => {
         this._conceptLevel = b.dataset.canvasaClvl as ConceptLevel
         panel.querySelectorAll<HTMLButtonElement>('[data-canvasa-clvl]').forEach((x) =>
           x.classList.toggle('is-active', x.dataset.canvasaClvl === this._conceptLevel))
+        this._topicSectionCache.clear()
+        this._pageState.clear()
         this._rerenderConceptTopics(wrap)
       })
     })
 
-    // Search input (debounced)
+    // Search input (debounced) — also invalidates section cache.
     let cdebounce: number | null = null
     const cq = panel.querySelector<HTMLInputElement>('[data-canvasa-concept-q]')
     cq?.addEventListener('input', () => {
       this._conceptQuery = cq.value
       if (cdebounce) clearTimeout(cdebounce)
-      cdebounce = window.setTimeout(() => this._rerenderConceptTopics(wrap), 180)
+      cdebounce = window.setTimeout(() => {
+        this._topicSectionCache.clear()
+        this._pageState.clear()
+        this._rerenderConceptTopics(wrap)
+      }, 220)
     })
 
-    if (!this._topicsData.length) {
+    // Phase 8: fetch ~1 KB of section headers ONCE — instant first paint.
+    // Per-section lessons fetch on expand via /api/library-topics/section.
+    if (!this._topicHeaders.length) {
       try {
-        const d: LibraryTopicsResponse = await canvasaApi.libraryTopics()
-        this._topicsData = d.topics || []
+        const d = await canvasaApi.libraryTopicHeaders()
+        this._topicHeaders = d.topics || []
       } catch (cause) {
         sub.textContent = 'Failed to load: ' + String(cause)
         this._fireError('library-topics-failed', String(cause), cause)
         return
       }
     }
-    const total = this._topicsData.reduce((acc, t) => acc + (t.lessons || []).length, 0)
-    sub.textContent = `${total.toLocaleString()} lessons across ${this._topicsData.length} topics — click a section to expand.`
+    const total = this._topicHeaders.reduce((acc, t) => acc + (t.count || 0), 0)
+    sub.textContent = `${total.toLocaleString()} lessons across ${this._topicHeaders.length} topics — click a section to expand.`
     this._rerenderConceptTopics(wrap)
   }
 
+  private _conceptLevelCount(t: LibraryTopicHeader): number {
+    // Server-side header counts let us label "X lessons" per filter without
+    // a roundtrip. Falls back to total when the filter chip is 'all'.
+    switch (this._conceptLevel) {
+      case 'HS': return t.hs_count
+      case 'UG': return t.ug_count
+      case 'G':  return t.g_count
+      default:   return t.count
+    }
+  }
+
   private _rerenderConceptTopics(wrap: HTMLElement): void {
-    const lvl = this._conceptLevel, q = this._conceptQuery.toLowerCase().trim()
-    wrap.innerHTML = this._topicsData.map((t, i) => {
-      let count = (t.lessons || []).length
-      if (lvl !== 'all' || q) {
-        count = (t.lessons || []).filter((l) => {
-          const cl = (l.level || 'HS') as ConceptLevel
-          const lvlOk = lvl === 'all' || cl === lvl
-          const txtOk = !q || (l.title || '').toLowerCase().includes(q)
-          return lvlOk && txtOk
-        }).length
-      }
+    const lvl = this._conceptLevel, q = this._conceptQuery.trim()
+    // Search query forces server-side filter — we can't know counts client-side
+    // without re-fetching, so we still draw all sections and let each body
+    // load its own paged + filtered results.
+    const filterActive = (lvl !== 'all' || !!q)
+    wrap.innerHTML = this._topicHeaders.map((t, i) => {
+      const baseCount = this._conceptLevelCount(t)
       const expanded = this._expanded.get('c:' + i) ?? (i === 0)
-      const filtered = (lvl !== 'all' || q)
+      const countLabel = q ? `${t.count} lessons · search active` : `${baseCount} lesson${baseCount === 1 ? '' : 's'}${filterActive ? ` of ${t.count}` : ''}`
+      // Hide sections that have zero matches under the current level filter.
+      const hide = (lvl !== 'all' && baseCount === 0 && !q)
       return `
-        <div class="tutor-topic${expanded ? ' is-expanded' : ''}" data-canvasa-ctopic="${i}" style="${filtered && count === 0 ? 'display:none;' : ''}">
+        <div class="tutor-topic${expanded ? ' is-expanded' : ''}" data-canvasa-ctopic="${i}" data-canvasa-cname="${escapeAttr(t.name)}" style="${hide ? 'display:none;' : ''}">
           <div class="tutor-topic__head" data-canvasa-ctoggle="${i}">
             <span class="tutor-topic__icon">${escapeHtml(t.icon || '📘')}</span>
             <span class="tutor-topic__name">${escapeHtml(t.name)}</span>
-            <span class="tutor-topic__count">${filtered ? `${count} of ${(t.lessons || []).length} match` : `${count} lessons`}</span>
+            <span class="tutor-topic__count">${escapeHtml(countLabel)}</span>
             <span class="tutor-topic__chev">▶</span>
           </div>
           <div class="tutor-topic__body" data-canvasa-ctopic-body="${i}" data-rendered="0"></div>
@@ -654,37 +685,62 @@ export class CanvasaTutorElement extends HTMLElement {
         const willExpand = !topic.classList.contains('is-expanded')
         topic.classList.toggle('is-expanded', willExpand)
         this._expanded.set('c:' + idx, willExpand)
-        if (willExpand) this._renderConceptTopicBody(wrap, idx, 0)
+        if (willExpand) void this._renderConceptTopicBody(wrap, idx, 0)
       })
     })
 
     // Auto-render first expanded section's body
-    this._topicsData.forEach((_, i) => {
-      if (this._expanded.get('c:' + i) ?? (i === 0)) this._renderConceptTopicBody(wrap, i, this._pageState.get('c:' + i) ?? 0)
+    this._topicHeaders.forEach((_, i) => {
+      if (this._expanded.get('c:' + i) ?? (i === 0)) {
+        void this._renderConceptTopicBody(wrap, i, this._pageState.get('c:' + i) ?? 0)
+      }
     })
   }
 
-  private _renderConceptTopicBody(wrap: HTMLElement, idx: number, page: number): void {
-    const topic = this._topicsData[idx]
-    if (!topic) return
+  private async _renderConceptTopicBody(wrap: HTMLElement, idx: number, page: number): Promise<void> {
+    const header = this._topicHeaders[idx]
+    if (!header) return
     const body = wrap.querySelector<HTMLElement>(`[data-canvasa-ctopic-body="${idx}"]`)
     if (!body) return
-    const lvl = this._conceptLevel, q = this._conceptQuery.toLowerCase().trim()
-    const filtered = (topic.lessons || []).filter((l) => {
-      const cl = (l.level || 'HS') as ConceptLevel
-      const lvlOk = lvl === 'all' || cl === lvl
-      const txtOk = !q || (l.title || '').toLowerCase().includes(q)
-      return lvlOk && txtOk
-    })
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+
+    const lvl = this._conceptLevel
+    const q = this._conceptQuery.trim()
+    const cacheKey = header.name
+    const offset = Math.max(0, page * PAGE_SIZE)
+
+    // Cache hit only when level + query + page match. Filter changes
+    // invalidate the entry.
+    const cached = this._topicSectionCache.get(cacheKey)
+    const cacheValid = cached && cached.level === lvl && cached.q === q && cached.offset === offset && cached.limit === PAGE_SIZE
+    let lessons: Lesson[]
+    let total: number
+    if (cacheValid && cached) {
+      lessons = cached.lessons
+      total = cached.total
+    } else {
+      // Show loading placeholder synchronously, then await the fetch.
+      body.innerHTML = '<div class="tutor-empty">Loading…</div>'
+      body.dataset.rendered = '0'
+      try {
+        const d = await canvasaApi.libraryTopicSection(header.name, offset, PAGE_SIZE, lvl, q)
+        lessons = d.lessons || []
+        total = d.total || 0
+        this._topicSectionCache.set(cacheKey, { lessons, total, offset, limit: PAGE_SIZE, level: lvl, q })
+      } catch (cause) {
+        body.innerHTML = `<div class="tutor-empty">Failed to load: ${escapeHtml(String(cause))}</div>`
+        this._fireError('library-topic-section-failed', String(cause), cause)
+        return
+      }
+    }
+
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
     if (page < 0) page = 0
     if (page >= totalPages) page = totalPages - 1
     this._pageState.set('c:' + idx, page)
-    const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
     body.innerHTML = `
       <div class="tutor-card-grid">
-        ${slice.map((l) => {
+        ${lessons.map((l) => {
           const level = l.level || 'HS'
           return `<button type="button" class="tutor-card" data-canvasa-lesson="${escapeAttr(l.slug)}" data-canvasa-cached="${l.cached ? '1' : '0'}" data-canvasa-title="${escapeAttr(l.title)}" data-canvasa-source="concept">
             <div class="tutor-card__title">${escapeHtml(l.title)}</div>
@@ -696,20 +752,20 @@ export class CanvasaTutorElement extends HTMLElement {
           </button>`
         }).join('')}
       </div>
-      ${filtered.length > PAGE_SIZE ? `
+      ${total > PAGE_SIZE ? `
         <div class="tutor-pag">
           <button type="button" data-canvasa-cpag-prev ${page <= 0 ? 'disabled' : ''}>← Prev</button>
-          <span>Page ${page + 1} of ${totalPages} · ${filtered.length} lesson${filtered.length === 1 ? '' : 's'}</span>
+          <span>Page ${page + 1} of ${totalPages} · ${total} lesson${total === 1 ? '' : 's'}</span>
           <button type="button" data-canvasa-cpag-next ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
-        </div>` : (filtered.length === 0 ? '<div class="tutor-empty">No matches in this topic.</div>' : '')}
+        </div>` : (total === 0 ? '<div class="tutor-empty">No matches in this topic.</div>' : '')}
     `
     body.dataset.rendered = '1'
 
     body.querySelector<HTMLButtonElement>('[data-canvasa-cpag-prev]')?.addEventListener('click', (e) => {
-      e.stopPropagation(); this._renderConceptTopicBody(wrap, idx, page - 1)
+      e.stopPropagation(); void this._renderConceptTopicBody(wrap, idx, page - 1)
     })
     body.querySelector<HTMLButtonElement>('[data-canvasa-cpag-next]')?.addEventListener('click', (e) => {
-      e.stopPropagation(); this._renderConceptTopicBody(wrap, idx, page + 1)
+      e.stopPropagation(); void this._renderConceptTopicBody(wrap, idx, page + 1)
     })
     body.querySelectorAll<HTMLButtonElement>('[data-canvasa-lesson]').forEach((card) => {
       card.addEventListener('click', () => {
@@ -749,6 +805,8 @@ export class CanvasaTutorElement extends HTMLElement {
         this._probChip = b.dataset.canvasaPchip as ProbChip
         panel.querySelectorAll<HTMLButtonElement>('[data-canvasa-pchip]').forEach((x) =>
           x.classList.toggle('is-active', x.dataset.canvasaPchip === this._probChip))
+        this._problemSectionCache.clear()
+        this._pageState.clear()
         this._rerenderProblemSections(wrap)
       })
     })
@@ -758,49 +816,63 @@ export class CanvasaTutorElement extends HTMLElement {
     pq?.addEventListener('input', () => {
       this._probQuery = pq.value
       if (pdebounce) clearTimeout(pdebounce)
-      pdebounce = window.setTimeout(() => this._rerenderProblemSections(wrap), 180)
+      pdebounce = window.setTimeout(() => {
+        this._problemSectionCache.clear()
+        this._pageState.clear()
+        this._rerenderProblemSections(wrap)
+      }, 220)
     })
 
-    if (!this._problemsData.length) {
+    // Phase 8: header-only fetch first paint. Per-section problems fetch on expand.
+    if (!this._problemHeaders.length) {
       try {
-        const d: ProblemsLibraryResponse = await canvasaApi.problemsLibrary()
-        this._problemsData = d.sections || []
+        const d = await canvasaApi.problemsLibraryHeaders()
+        this._problemHeaders = d.sections || []
       } catch (cause) {
         sub.textContent = 'Failed to load: ' + String(cause)
         this._fireError('problems-library-failed', String(cause), cause)
         return
       }
     }
-    const total = this._problemsData.reduce((a, s) => a + (s.problems || []).length, 0)
-    sub.textContent = `${total.toLocaleString()} problems across ${this._problemsData.length} sections — click a section to expand.`
+    const total = this._problemHeaders.reduce((a, s) => a + (s.count || 0), 0)
+    sub.textContent = `${total.toLocaleString()} problems across ${this._problemHeaders.length} sections — click a section to expand.`
     this._rerenderProblemSections(wrap)
   }
 
-  private _filterProblems(section: ProblemSection): Problem[] {
-    const chip = this._probChip, q = this._probQuery.toLowerCase().trim()
-    return (section.problems || []).filter((p) => {
-      let chipOk = chip === 'all'
-      if (!chipOk) {
-        if (chip === 'cached') chipOk = !!p.cached
-        else if (chip === 'Olympiad') chipOk = (p.origin === 'physolympiad') || (p.source_kind === 'olympiad')
-        else chipOk = ((p.level || 'UG') === chip)
-      }
-      const txtOk = !q || (p.title || '').toLowerCase().includes(q) || (p.statement || '').toLowerCase().includes(q)
-      return chipOk && txtOk
-    })
+  private _probChipToLevel(): 'all' | 'HS' | 'UG' | 'G' | 'olympiad' | 'cached' {
+    switch (this._probChip) {
+      case 'HS': case 'UG': case 'G': return this._probChip
+      case 'Olympiad': return 'olympiad'
+      case 'cached':   return 'cached'
+      default: return 'all'
+    }
+  }
+
+  private _problemChipCount(s: ProblemsLibraryHeader): number {
+    switch (this._probChip) {
+      case 'HS': return s.hs_count
+      case 'UG': return s.ug_count
+      case 'G':  return s.g_count
+      case 'Olympiad': return s.olympiad_count
+      case 'cached':   return s.cached_count
+      default: return s.count
+    }
   }
 
   private _rerenderProblemSections(wrap: HTMLElement): void {
-    const chipActive = this._probChip !== 'all' || !!this._probQuery
-    wrap.innerHTML = this._problemsData.map((s, i) => {
-      const count = chipActive ? this._filterProblems(s).length : (s.problems || []).length
+    const chip = this._probChip, q = this._probQuery.trim()
+    const filterActive = (chip !== 'all' || !!q)
+    wrap.innerHTML = this._problemHeaders.map((s, i) => {
+      const baseCount = this._problemChipCount(s)
       const expanded = this._expanded.get('p:' + i) ?? (i === 0)
+      const countLabel = q ? `${s.count} problems · search active` : `${baseCount} problem${baseCount === 1 ? '' : 's'}${filterActive ? ` of ${s.count}` : ''}`
+      const hide = (chip !== 'all' && baseCount === 0 && !q)
       return `
-        <div class="tutor-topic${expanded ? ' is-expanded' : ''}" data-canvasa-psec="${i}" style="${chipActive && count === 0 ? 'display:none;' : ''}">
+        <div class="tutor-topic${expanded ? ' is-expanded' : ''}" data-canvasa-psec="${i}" data-canvasa-pname="${escapeAttr(s.name)}" style="${hide ? 'display:none;' : ''}">
           <div class="tutor-topic__head" data-canvasa-ptoggle="${i}">
             <span class="tutor-topic__icon">${escapeHtml(s.icon || '📘')}</span>
             <span class="tutor-topic__name">${escapeHtml(s.name)}</span>
-            <span class="tutor-topic__count">${chipActive ? `${count} of ${(s.problems || []).length} match` : `${count} problem${count === 1 ? '' : 's'}`}</span>
+            <span class="tutor-topic__count">${escapeHtml(countLabel)}</span>
             <span class="tutor-topic__chev">▶</span>
           </div>
           <div class="tutor-topic__body" data-canvasa-psec-body="${i}" data-rendered="0"></div>
@@ -820,26 +892,53 @@ export class CanvasaTutorElement extends HTMLElement {
     })
 
     // Auto-render initially expanded sections
-    this._problemsData.forEach((_, i) => {
+    this._problemHeaders.forEach((_, i) => {
       if (this._expanded.get('p:' + i) ?? (i === 0)) void this._renderProblemSectionBody(wrap, i, this._pageState.get('p:' + i) ?? 0)
     })
   }
 
   private async _renderProblemSectionBody(wrap: HTMLElement, idx: number, page: number): Promise<void> {
-    const section = this._problemsData[idx]
-    if (!section) return
+    const header = this._problemHeaders[idx]
+    if (!header) return
     const body = wrap.querySelector<HTMLElement>(`[data-canvasa-psec-body="${idx}"]`)
     if (!body) return
-    const filtered = this._filterProblems(section)
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+
+    const chip = this._probChip
+    const lvl = this._probChipToLevel()
+    const q = this._probQuery.trim()
+    const cacheKey = header.name
+    const offset = Math.max(0, page * PAGE_SIZE)
+
+    const cached = this._problemSectionCache.get(cacheKey)
+    const cacheValid = cached && cached.chip === chip && cached.q === q && cached.offset === offset && cached.limit === PAGE_SIZE
+    let problems: Problem[]
+    let total: number
+    if (cacheValid && cached) {
+      problems = cached.problems
+      total = cached.total
+    } else {
+      body.innerHTML = '<div class="tutor-empty">Loading…</div>'
+      body.dataset.rendered = '0'
+      try {
+        const d = await canvasaApi.problemsLibrarySection(header.name, offset, PAGE_SIZE, lvl, q)
+        problems = d.problems || []
+        total = d.total || 0
+        this._problemSectionCache.set(cacheKey, { problems, total, offset, limit: PAGE_SIZE, chip, q })
+      } catch (cause) {
+        body.innerHTML = `<div class="tutor-empty">Failed to load: ${escapeHtml(String(cause))}</div>`
+        this._fireError('problems-library-section-failed', String(cause), cause)
+        return
+      }
+    }
+
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
     if (page < 0) page = 0
     if (page >= totalPages) page = totalPages - 1
     this._pageState.set('p:' + idx, page)
-    const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
     body.innerHTML = `
       <div class="tutor-prob-list">
-        ${slice.map((p) => {
+        ${problems.map((p) => {
           const level = p.level || 'UG'
           const diff = p.difficulty || 'medium'
           return `<button type="button" class="tutor-prob" data-canvasa-lesson="${escapeAttr(p.slug)}" data-canvasa-cached="${p.cached ? '1' : '0'}" data-canvasa-title="${escapeAttr(p.title)}" data-canvasa-source="problem" data-canvasa-statement="${escapeAttr(p.statement || '')}">
@@ -855,12 +954,12 @@ export class CanvasaTutorElement extends HTMLElement {
           </button>`
         }).join('')}
       </div>
-      ${filtered.length > PAGE_SIZE ? `
+      ${total > PAGE_SIZE ? `
         <div class="tutor-pag">
           <button type="button" data-canvasa-ppag-prev ${page <= 0 ? 'disabled' : ''}>← Prev</button>
-          <span>Page ${page + 1} of ${totalPages} · ${filtered.length} result${filtered.length === 1 ? '' : 's'}</span>
+          <span>Page ${page + 1} of ${totalPages} · ${total} result${total === 1 ? '' : 's'}</span>
           <button type="button" data-canvasa-ppag-next ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
-        </div>` : (filtered.length === 0 ? '<div class="tutor-empty">No matches in this section.</div>' : '')}
+        </div>` : (total === 0 ? '<div class="tutor-empty">No matches in this section.</div>' : '')}
     `
     body.dataset.rendered = '1'
 

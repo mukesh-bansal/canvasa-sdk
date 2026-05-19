@@ -16,6 +16,10 @@ import type {
   InventoryCounts,
   LibraryTopicsResponse,
   ProblemsLibraryResponse,
+  LibraryTopicHeadersResponse,
+  LibraryTopicSectionResponse,
+  ProblemsLibraryHeadersResponse,
+  ProblemsLibrarySectionResponse,
   GenerateLessonResponse,
   LessonStatus,
   WikiSearchResult,
@@ -79,8 +83,36 @@ async function postMultipart<T>(path: string, fd: FormData): Promise<T> {
 
 export const canvasaApi = {
   inventoryCounts: () => getJSON<InventoryCounts>('/inventory-counts'),
+  // Heavy legacy endpoints — kept for back-compat with older SDK clients
+  // pinned to a tag. New code MUST use the headers + section variants below.
   libraryTopics:   () => getJSON<LibraryTopicsResponse>('/library-topics'),
   problemsLibrary: () => getJSON<ProblemsLibraryResponse>('/problems-library'),
+
+  // Phase 8 — lazy-load endpoints. headers: KB. section: ~5-15 KB per page.
+  libraryTopicHeaders: () =>
+    getJSON<LibraryTopicHeadersResponse>('/library-topics/headers'),
+  libraryTopicSection: (
+    name: string,
+    offset = 0,
+    limit = 30,
+    level: 'all' | 'HS' | 'UG' | 'G' = 'all',
+    q = '',
+  ) =>
+    getJSON<LibraryTopicSectionResponse>('/library-topics/section', {
+      name, offset, limit, level, q,
+    }),
+  problemsLibraryHeaders: () =>
+    getJSON<ProblemsLibraryHeadersResponse>('/problems-library/headers'),
+  problemsLibrarySection: (
+    name: string,
+    offset = 0,
+    limit = 30,
+    level: 'all' | 'HS' | 'UG' | 'G' | 'olympiad' | 'cached' = 'all',
+    q = '',
+  ) =>
+    getJSON<ProblemsLibrarySectionResponse>('/problems-library/section', {
+      name, offset, limit, level, q,
+    }),
 
   generateLesson:  (topic: string) => postJSON<GenerateLessonResponse>('/generate-lesson', { topic }),
   generateFromUrl: (urlIn: string, title?: string) =>

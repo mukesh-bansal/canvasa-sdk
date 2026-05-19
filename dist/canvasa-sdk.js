@@ -1,29 +1,29 @@
-const x = "0.1.0-alpha.3";
-let q = "https://canvasa.olympiz.ai", k = "default";
-function A(i) {
-  i.host && (q = i.host.replace(/\/$/, "")), i.tenant && (k = i.tenant);
+const S = "0.1.0-alpha.4";
+let U = "https://canvasa.olympiz.ai", L = "default";
+function j(i) {
+  i.host && (U = i.host.replace(/\/$/, "")), i.tenant && (L = i.tenant);
 }
-function E(i, t) {
-  const e = new URL(`${q}/api${i}`);
+function P(i, t) {
+  const e = new URL(`${U}/api${i}`);
   if (t)
-    for (const [o, r] of Object.entries(t))
-      r != null && r !== "" && e.searchParams.set(o, String(r));
+    for (const [r, n] of Object.entries(t))
+      n != null && n !== "" && e.searchParams.set(r, String(n));
   return e.toString();
 }
-async function g(i, t) {
-  const e = await fetch(E(i, t), {
-    headers: { "X-Tutor-Tenant": k, Accept: "application/json" },
+async function _(i, t) {
+  const e = await fetch(P(i, t), {
+    headers: { "X-Tutor-Tenant": L, Accept: "application/json" },
     credentials: "omit"
   });
   if (!e.ok) throw new Error(`canvasa-api ${i} HTTP ${e.status}`);
   return await e.json();
 }
-async function P(i, t) {
-  const e = await fetch(E(i), {
+async function B(i, t) {
+  const e = await fetch(P(i), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Tutor-Tenant": k,
+      "X-Tutor-Tenant": L,
       Accept: "application/json"
     },
     body: JSON.stringify(t),
@@ -33,46 +33,65 @@ async function P(i, t) {
   return await e.json();
 }
 async function D(i, t) {
-  const e = await fetch(E(i), {
+  const e = await fetch(P(i), {
     method: "POST",
-    headers: { "X-Tutor-Tenant": k, Accept: "application/json" },
+    headers: { "X-Tutor-Tenant": L, Accept: "application/json" },
     body: t,
     credentials: "omit"
   });
   if (!e.ok) throw new Error(`canvasa-api ${i} HTTP ${e.status}`);
   return await e.json();
 }
-const _ = {
-  inventoryCounts: () => g("/inventory-counts"),
-  libraryTopics: () => g("/library-topics"),
-  problemsLibrary: () => g("/problems-library"),
-  generateLesson: (i) => P("/generate-lesson", { topic: i }),
-  generateFromUrl: (i, t) => P("/generate-from-url", { url: i, title: t }),
+const x = {
+  inventoryCounts: () => _("/inventory-counts"),
+  // Heavy legacy endpoints — kept for back-compat with older SDK clients
+  // pinned to a tag. New code MUST use the headers + section variants below.
+  libraryTopics: () => _("/library-topics"),
+  problemsLibrary: () => _("/problems-library"),
+  // Phase 8 — lazy-load endpoints. headers: KB. section: ~5-15 KB per page.
+  libraryTopicHeaders: () => _("/library-topics/headers"),
+  libraryTopicSection: (i, t = 0, e = 30, r = "all", n = "") => _("/library-topics/section", {
+    name: i,
+    offset: t,
+    limit: e,
+    level: r,
+    q: n
+  }),
+  problemsLibraryHeaders: () => _("/problems-library/headers"),
+  problemsLibrarySection: (i, t = 0, e = 30, r = "all", n = "") => _("/problems-library/section", {
+    name: i,
+    offset: t,
+    limit: e,
+    level: r,
+    q: n
+  }),
+  generateLesson: (i) => B("/generate-lesson", { topic: i }),
+  generateFromUrl: (i, t) => B("/generate-from-url", { url: i, title: t }),
   generateFromPdf: (i) => {
     const t = new FormData();
     return t.append("file", i), D("/generate-from-pdf", t);
   },
-  lessonStatus: (i) => g(`/lesson-status/${encodeURIComponent(i)}`),
-  wikiSearch: (i) => g("/wiki-opensearch", { q: i }),
-  superstemSearch: (i) => g("/superstem-search", { q: i }),
+  lessonStatus: (i) => _(`/lesson-status/${encodeURIComponent(i)}`),
+  wikiSearch: (i) => _("/wiki-opensearch", { q: i }),
+  superstemSearch: (i) => _("/superstem-search", { q: i }),
   // Phase 3 endpoint — graceful fallback handled in canvasa-tutor.ts when missing
-  brand: (i) => g(`/brand/${encodeURIComponent(i)}`)
-}, j = ':root,.tutor-root{--tutor-bg: #fbfaf6;--tutor-surface: #ffffff;--tutor-surface-soft: #f6f4ee;--tutor-text: #1a1a2e;--tutor-muted: #4a4a5a;--tutor-faint: #8b8b9b;--tutor-border: #e7ecf3;--tutor-border-soft: #efefe7;--tutor-accent: #c9a227;--tutor-accent-soft: rgba(201, 162, 39, .12);--tutor-accent-strong:#8f7016;--tutor-on-accent: #14213d;--tutor-primary: #14213d;--tutor-primary-hover:#0a162b;--tutor-on-primary: #ffffff;--tutor-success: #047857;--tutor-warning: #b45309;--tutor-danger: #b91c1c;--tutor-radius: 12px;--tutor-radius-sm: 8px;--tutor-radius-lg: 18px;--tutor-font-display: "Playfair Display", Georgia, serif;--tutor-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;--tutor-font-mono: "JetBrains Mono", ui-monospace, monospace;--tutor-shadow-sm: 0 1px 3px rgba(0,0,0,.04);--tutor-shadow: 0 4px 14px rgba(0,0,0,.06)}.tutor-page{max-width:1100px;margin:0 auto;padding:32px 16px 64px;font-family:var(--tutor-font-body);color:var(--tutor-text);background:var(--tutor-bg)}.tutor-hero{text-align:center;margin-bottom:40px}.tutor-hero h1{font-family:var(--tutor-font-display);font-size:clamp(2rem,4vw,3rem);line-height:1.15;margin:0 0 8px;color:var(--tutor-text);font-weight:700}.tutor-hero h1 em{color:var(--tutor-accent-strong);font-style:italic}.tutor-hero p{color:var(--tutor-muted);font-size:1.05rem;margin:0}.tutor-tabs{display:flex;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--tutor-border);margin-bottom:24px}.tutor-tab{background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 0;font:inherit;color:var(--tutor-muted);cursor:pointer;font-size:.95rem;white-space:nowrap;transition:color .15s,border-color .15s}.tutor-tab:hover{color:var(--tutor-text)}.tutor-tab.is-active{color:var(--tutor-text);border-bottom-color:var(--tutor-accent-strong);font-weight:500}.tutor-tab__count{color:var(--tutor-muted);font-size:.78rem;margin-left:4px;font-weight:400}.tutor-section{background:var(--tutor-surface);border:1px solid var(--tutor-border);border-radius:var(--tutor-radius);padding:20px 22px;margin-bottom:16px;box-shadow:var(--tutor-shadow-sm)}.tutor-section h2{font-family:var(--tutor-font-display);font-size:1.35rem;font-weight:600;margin:0 0 12px;color:var(--tutor-text)}.tutor-section h3{font-family:var(--tutor-font-display);font-size:1.05rem;font-weight:500;margin:0 0 8px;color:var(--tutor-text);display:flex;align-items:center;gap:8px}.tutor-section__sub{font-size:.78rem;color:var(--tutor-muted);margin:-8px 0 14px}.tutor-input{display:block;width:100%;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-text);font:inherit;font-size:.95rem;transition:border-color .15s,box-shadow .15s}.tutor-input::placeholder{color:var(--tutor-faint)}.tutor-input:focus{outline:none;border-color:var(--tutor-accent-strong);box-shadow:0 0 0 3px var(--tutor-accent-soft)}.tutor-input--sm{padding:8px 12px;font-size:.9rem}.tutor-row{display:flex;gap:10px;flex-wrap:wrap}@media (min-width: 640px){.tutor-row{flex-wrap:nowrap}}.tutor-row>.tutor-input{flex:1 1 auto}.tutor-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:var(--tutor-radius-sm);border:1px solid transparent;background:var(--tutor-primary);color:var(--tutor-on-primary);font:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,opacity .15s}.tutor-btn:hover:not(:disabled){background:var(--tutor-primary-hover)}.tutor-btn:disabled{opacity:.5;cursor:not-allowed}.tutor-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);font:inherit;font-size:.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}.tutor-chip:hover{border-color:var(--tutor-accent-strong);color:var(--tutor-text)}.tutor-chip.is-active{background:var(--tutor-primary);color:var(--tutor-on-primary);border-color:var(--tutor-primary)}.tutor-sources{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}@media (min-width: 720px){.tutor-sources{grid-template-columns:1fr 1fr 1fr}}.tutor-source{text-align:left;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;transition:border-color .15s,background .15s}.tutor-source:hover{border-color:var(--tutor-accent-strong)}.tutor-source.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-source__row{display:flex;gap:10px;align-items:flex-start}.tutor-source__dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--tutor-border);margin-top:4px;flex-shrink:0}.tutor-source.is-active .tutor-source__dot{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-strong)}.tutor-source__lbl{font-weight:500;font-size:.9rem}.tutor-source__sub{font-size:.78rem;color:var(--tutor-muted);margin-top:2px}.tutor-results{margin-top:12px;border:1px solid var(--tutor-border);border-radius:var(--tutor-radius-sm);background:var(--tutor-bg);overflow:hidden}.tutor-result{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;font:inherit;color:var(--tutor-text);cursor:pointer;transition:background .12s;border-bottom:1px solid var(--tutor-border)}.tutor-result:last-child{border-bottom:none}.tutor-result:hover{background:var(--tutor-surface-soft)}.tutor-result__title{font-size:.9rem;font-weight:500}.tutor-result__blurb{font-size:.78rem;color:var(--tutor-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-hint{font-size:.72rem;color:var(--tutor-muted);margin-top:12px}.tutor-drop{border:2px dashed var(--tutor-border);background:var(--tutor-bg);border-radius:var(--tutor-radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}.tutor-drop:hover{border-color:var(--tutor-accent-strong)}.tutor-drop.is-hover{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-drop__icon{font-size:1.6rem;margin-bottom:8px}.tutor-drop__hint{color:var(--tutor-text);font-size:.92rem}.tutor-drop__hint strong{color:var(--tutor-accent-strong)}.tutor-card-grid{display:grid;grid-template-columns:1fr;gap:10px}@media (min-width: 720px){.tutor-card-grid{grid-template-columns:1fr 1fr}}@media (min-width: 1024px){.tutor-card-grid{grid-template-columns:1fr 1fr 1fr}}.tutor-card{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;transition:border-color .15s,box-shadow .15s}.tutor-card:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-card__title{font-size:.9rem}.tutor-card__meta{margin-top:6px;display:flex;gap:10px;font-size:.7rem;color:var(--tutor-muted);align-items:center}.tutor-card__cached{color:var(--tutor-success)}.tutor-prob{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}.tutor-prob:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-prob__head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tutor-prob__title{font-size:.9rem;font-weight:500}.tutor-prob__statement{margin-top:6px;font-size:.78rem;color:var(--tutor-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-pill{font-size:.62rem;padding:2px 6px;border-radius:4px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);text-transform:lowercase;letter-spacing:.04em}.tutor-pill--easy{color:var(--tutor-success);border-color:#0478574d}.tutor-pill--medium{color:var(--tutor-warning);border-color:#b453094d}.tutor-pill--hard{color:var(--tutor-danger);border-color:#b91c1c4d}.tutor-status{margin-top:12px;font-size:.85rem;color:var(--tutor-muted)}.tutor-status--error{color:var(--tutor-danger)}.tutor-empty{font-size:.88rem;color:var(--tutor-muted);padding:12px 0}.tutor-modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:#0d122073;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}.tutor-modal{background:var(--tutor-surface);border-radius:var(--tutor-radius-lg);box-shadow:0 20px 60px #0000004d;padding:28px 32px;width:100%;max-width:560px;font-family:var(--tutor-font-body);color:var(--tutor-text)}.tutor-modal__eyebrow{font-size:11px;font-weight:600;color:var(--tutor-accent-strong);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px}.tutor-modal__title{font-family:var(--tutor-font-display);font-size:22px;font-weight:600;margin:0 0 4px;color:var(--tutor-text)}.tutor-modal__sub{font-size:12px;color:var(--tutor-muted);margin:0 0 18px}.tutor-modal__option{display:block;width:100%;text-align:left;padding:16px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;margin-bottom:10px;transition:border-color .12s,background .12s}.tutor-modal__option:hover{border-color:var(--tutor-accent-strong)}.tutor-modal__option.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-modal__option-row{display:flex;align-items:flex-start;gap:12px}.tutor-modal__radio{margin-top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--tutor-border);flex-shrink:0;display:flex;align-items:center;justify-content:center}.tutor-modal__option.is-active .tutor-modal__radio{border-color:var(--tutor-accent-strong)}.tutor-modal__radio-dot{width:8px;height:8px;border-radius:50%;background:var(--tutor-accent-strong)}.tutor-modal__option-title{font-family:var(--tutor-font-display);font-style:italic;font-weight:600;font-size:16px;color:var(--tutor-accent-strong);display:inline}.tutor-modal__option-badge{margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.14em;padding:2px 6px;border-radius:3px;background:#3fcc7a2e;color:#1a7341;text-transform:uppercase}.tutor-modal__option-desc{font-size:12px;color:var(--tutor-muted);margin-top:6px;line-height:1.5}.tutor-modal__actions{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.tutor-btn--ghost{background:transparent;color:var(--tutor-muted);border:1px solid var(--tutor-border);padding:8px 16px;border-radius:var(--tutor-radius-sm);font:inherit;font-size:13px;cursor:pointer;transition:color .12s,border-color .12s}.tutor-btn--ghost:hover:not(:disabled){color:var(--tutor-text);border-color:var(--tutor-accent-strong)}.tutor-btn--ghost:disabled{opacity:.5;cursor:not-allowed}', f = 30;
-function $() {
+  brand: (i) => _(`/brand/${encodeURIComponent(i)}`)
+}, F = ':root,.tutor-root{--tutor-bg: #fbfaf6;--tutor-surface: #ffffff;--tutor-surface-soft: #f6f4ee;--tutor-text: #1a1a2e;--tutor-muted: #4a4a5a;--tutor-faint: #8b8b9b;--tutor-border: #e7ecf3;--tutor-border-soft: #efefe7;--tutor-accent: #c9a227;--tutor-accent-soft: rgba(201, 162, 39, .12);--tutor-accent-strong:#8f7016;--tutor-on-accent: #14213d;--tutor-primary: #14213d;--tutor-primary-hover:#0a162b;--tutor-on-primary: #ffffff;--tutor-success: #047857;--tutor-warning: #b45309;--tutor-danger: #b91c1c;--tutor-radius: 12px;--tutor-radius-sm: 8px;--tutor-radius-lg: 18px;--tutor-font-display: "Playfair Display", Georgia, serif;--tutor-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;--tutor-font-mono: "JetBrains Mono", ui-monospace, monospace;--tutor-shadow-sm: 0 1px 3px rgba(0,0,0,.04);--tutor-shadow: 0 4px 14px rgba(0,0,0,.06)}.tutor-page{max-width:1100px;margin:0 auto;padding:32px 16px 64px;font-family:var(--tutor-font-body);color:var(--tutor-text);background:var(--tutor-bg)}.tutor-hero{text-align:center;margin-bottom:40px}.tutor-hero h1{font-family:var(--tutor-font-display);font-size:clamp(2rem,4vw,3rem);line-height:1.15;margin:0 0 8px;color:var(--tutor-text);font-weight:700}.tutor-hero h1 em{color:var(--tutor-accent-strong);font-style:italic}.tutor-hero p{color:var(--tutor-muted);font-size:1.05rem;margin:0}.tutor-tabs{display:flex;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--tutor-border);margin-bottom:24px}.tutor-tab{background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 0;font:inherit;color:var(--tutor-muted);cursor:pointer;font-size:.95rem;white-space:nowrap;transition:color .15s,border-color .15s}.tutor-tab:hover{color:var(--tutor-text)}.tutor-tab.is-active{color:var(--tutor-text);border-bottom-color:var(--tutor-accent-strong);font-weight:500}.tutor-tab__count{color:var(--tutor-muted);font-size:.78rem;margin-left:4px;font-weight:400}.tutor-section{background:var(--tutor-surface);border:1px solid var(--tutor-border);border-radius:var(--tutor-radius);padding:20px 22px;margin-bottom:16px;box-shadow:var(--tutor-shadow-sm)}.tutor-section h2{font-family:var(--tutor-font-display);font-size:1.35rem;font-weight:600;margin:0 0 12px;color:var(--tutor-text)}.tutor-section h3{font-family:var(--tutor-font-display);font-size:1.05rem;font-weight:500;margin:0 0 8px;color:var(--tutor-text);display:flex;align-items:center;gap:8px}.tutor-section__sub{font-size:.78rem;color:var(--tutor-muted);margin:-8px 0 14px}.tutor-input{display:block;width:100%;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-text);font:inherit;font-size:.95rem;transition:border-color .15s,box-shadow .15s}.tutor-input::placeholder{color:var(--tutor-faint)}.tutor-input:focus{outline:none;border-color:var(--tutor-accent-strong);box-shadow:0 0 0 3px var(--tutor-accent-soft)}.tutor-input--sm{padding:8px 12px;font-size:.9rem}.tutor-row{display:flex;gap:10px;flex-wrap:wrap}@media (min-width: 640px){.tutor-row{flex-wrap:nowrap}}.tutor-row>.tutor-input{flex:1 1 auto}.tutor-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:var(--tutor-radius-sm);border:1px solid transparent;background:var(--tutor-primary);color:var(--tutor-on-primary);font:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,opacity .15s}.tutor-btn:hover:not(:disabled){background:var(--tutor-primary-hover)}.tutor-btn:disabled{opacity:.5;cursor:not-allowed}.tutor-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);font:inherit;font-size:.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}.tutor-chip:hover{border-color:var(--tutor-accent-strong);color:var(--tutor-text)}.tutor-chip.is-active{background:var(--tutor-primary);color:var(--tutor-on-primary);border-color:var(--tutor-primary)}.tutor-sources{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}@media (min-width: 720px){.tutor-sources{grid-template-columns:1fr 1fr 1fr}}.tutor-source{text-align:left;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;transition:border-color .15s,background .15s}.tutor-source:hover{border-color:var(--tutor-accent-strong)}.tutor-source.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-source__row{display:flex;gap:10px;align-items:flex-start}.tutor-source__dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--tutor-border);margin-top:4px;flex-shrink:0}.tutor-source.is-active .tutor-source__dot{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-strong)}.tutor-source__lbl{font-weight:500;font-size:.9rem}.tutor-source__sub{font-size:.78rem;color:var(--tutor-muted);margin-top:2px}.tutor-results{margin-top:12px;border:1px solid var(--tutor-border);border-radius:var(--tutor-radius-sm);background:var(--tutor-bg);overflow:hidden}.tutor-result{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;font:inherit;color:var(--tutor-text);cursor:pointer;transition:background .12s;border-bottom:1px solid var(--tutor-border)}.tutor-result:last-child{border-bottom:none}.tutor-result:hover{background:var(--tutor-surface-soft)}.tutor-result__title{font-size:.9rem;font-weight:500}.tutor-result__blurb{font-size:.78rem;color:var(--tutor-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-hint{font-size:.72rem;color:var(--tutor-muted);margin-top:12px}.tutor-drop{border:2px dashed var(--tutor-border);background:var(--tutor-bg);border-radius:var(--tutor-radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}.tutor-drop:hover{border-color:var(--tutor-accent-strong)}.tutor-drop.is-hover{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-drop__icon{font-size:1.6rem;margin-bottom:8px}.tutor-drop__hint{color:var(--tutor-text);font-size:.92rem}.tutor-drop__hint strong{color:var(--tutor-accent-strong)}.tutor-card-grid{display:grid;grid-template-columns:1fr;gap:10px}@media (min-width: 720px){.tutor-card-grid{grid-template-columns:1fr 1fr}}@media (min-width: 1024px){.tutor-card-grid{grid-template-columns:1fr 1fr 1fr}}.tutor-card{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;transition:border-color .15s,box-shadow .15s}.tutor-card:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-card__title{font-size:.9rem}.tutor-card__meta{margin-top:6px;display:flex;gap:10px;font-size:.7rem;color:var(--tutor-muted);align-items:center}.tutor-card__cached{color:var(--tutor-success)}.tutor-prob{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}.tutor-prob:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-prob__head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tutor-prob__title{font-size:.9rem;font-weight:500}.tutor-prob__statement{margin-top:6px;font-size:.78rem;color:var(--tutor-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-pill{font-size:.62rem;padding:2px 6px;border-radius:4px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);text-transform:lowercase;letter-spacing:.04em}.tutor-pill--easy{color:var(--tutor-success);border-color:#0478574d}.tutor-pill--medium{color:var(--tutor-warning);border-color:#b453094d}.tutor-pill--hard{color:var(--tutor-danger);border-color:#b91c1c4d}.tutor-status{margin-top:12px;font-size:.85rem;color:var(--tutor-muted)}.tutor-status--error{color:var(--tutor-danger)}.tutor-empty{font-size:.88rem;color:var(--tutor-muted);padding:12px 0}.tutor-modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:#0d122073;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}.tutor-modal{background:var(--tutor-surface);border-radius:var(--tutor-radius-lg);box-shadow:0 20px 60px #0000004d;padding:28px 32px;width:100%;max-width:560px;font-family:var(--tutor-font-body);color:var(--tutor-text)}.tutor-modal__eyebrow{font-size:11px;font-weight:600;color:var(--tutor-accent-strong);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px}.tutor-modal__title{font-family:var(--tutor-font-display);font-size:22px;font-weight:600;margin:0 0 4px;color:var(--tutor-text)}.tutor-modal__sub{font-size:12px;color:var(--tutor-muted);margin:0 0 18px}.tutor-modal__option{display:block;width:100%;text-align:left;padding:16px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;margin-bottom:10px;transition:border-color .12s,background .12s}.tutor-modal__option:hover{border-color:var(--tutor-accent-strong)}.tutor-modal__option.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-modal__option-row{display:flex;align-items:flex-start;gap:12px}.tutor-modal__radio{margin-top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--tutor-border);flex-shrink:0;display:flex;align-items:center;justify-content:center}.tutor-modal__option.is-active .tutor-modal__radio{border-color:var(--tutor-accent-strong)}.tutor-modal__radio-dot{width:8px;height:8px;border-radius:50%;background:var(--tutor-accent-strong)}.tutor-modal__option-title{font-family:var(--tutor-font-display);font-style:italic;font-weight:600;font-size:16px;color:var(--tutor-accent-strong);display:inline}.tutor-modal__option-badge{margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.14em;padding:2px 6px;border-radius:3px;background:#3fcc7a2e;color:#1a7341;text-transform:uppercase}.tutor-modal__option-desc{font-size:12px;color:var(--tutor-muted);margin-top:6px;line-height:1.5}.tutor-modal__actions{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.tutor-btn--ghost{background:transparent;color:var(--tutor-muted);border:1px solid var(--tutor-border);padding:8px 16px;border-radius:var(--tutor-radius-sm);font:inherit;font-size:13px;cursor:pointer;transition:color .12s,border-color .12s}.tutor-btn--ghost:hover:not(:disabled){color:var(--tutor-text);border-color:var(--tutor-accent-strong)}.tutor-btn--ghost:disabled{opacity:.5;cursor:not-allowed}', g = 30;
+function T() {
   return typeof window < "u" && window.CANVASA_HOST ? window.CANVASA_HOST : "https://canvasa.olympiz.ai";
 }
-let S = !1;
-function O() {
-  if (S || typeof document > "u") return;
+let M = !1;
+function G() {
+  if (M || typeof document > "u") return;
   const i = "canvasa-sdk-styles";
   if (document.getElementById(i)) {
-    S = !0;
+    M = !0;
     return;
   }
   const t = document.createElement("style");
-  t.id = i, t.textContent = j, document.head.appendChild(t), S = !0;
+  t.id = i, t.textContent = F, document.head.appendChild(t), M = !0;
 }
-function h(i) {
+function b(i) {
   return i == null ? "" : String(i).replace(/[&<>"']/g, (t) => ({
     "&": "&amp;",
     "<": "&lt;",
@@ -81,44 +100,44 @@ function h(i) {
     "'": "&#39;"
   })[t]);
 }
-function m(i) {
-  return h(i).replace(/`/g, "&#96;");
+function f(i) {
+  return b(i).replace(/`/g, "&#96;");
 }
-let y = null, w = null;
-async function B(i) {
+let k = null, E = null;
+async function N(i) {
   if (i === "off") return null;
-  if (y) return y;
+  if (k) return k;
   if (typeof window > "u") return null;
   if (typeof window.renderMathInElement == "function")
-    return y = window.renderMathInElement, y;
-  if (w) return w;
+    return k = window.renderMathInElement, k;
+  if (E) return E;
   const t = i || "https://cdn.jsdelivr.net/npm/katex@0.16.10/dist";
-  return w = (async () => {
+  return E = (async () => {
     try {
       if (!document.querySelector(`link[href^="${t}/katex.min.css"]`)) {
         const e = document.createElement("link");
         e.rel = "stylesheet", e.href = `${t}/katex.min.css`, e.crossOrigin = "anonymous", document.head.appendChild(e);
       }
-      await M(`${t}/katex.min.js`), await M(`${t}/contrib/auto-render.min.js`);
+      await O(`${t}/katex.min.js`), await O(`${t}/contrib/auto-render.min.js`);
       for (let e = 0; e < 30; e++) {
         if (typeof window.renderMathInElement == "function")
-          return y = window.renderMathInElement, y;
-        await new Promise((o) => setTimeout(o, 100));
+          return k = window.renderMathInElement, k;
+        await new Promise((r) => setTimeout(r, 100));
       }
     } catch (e) {
       console.warn("[canvasa-sdk] KaTeX load failed; raw $...$ will show", e);
     }
     return null;
-  })(), w;
+  })(), E;
 }
-function M(i) {
+function O(i) {
   return new Promise((t, e) => {
     if (document.querySelector(`script[src="${i}"]`)) return t();
-    const o = document.createElement("script");
-    o.src = i, o.async = !0, o.crossOrigin = "anonymous", o.onload = () => t(), o.onerror = (r) => e(r), document.head.appendChild(o);
+    const r = document.createElement("script");
+    r.src = i, r.async = !0, r.crossOrigin = "anonymous", r.onload = () => t(), r.onerror = (n) => e(n), document.head.appendChild(r);
   });
 }
-function I(i, t) {
+function W(i, t) {
   if (t)
     try {
       t(i, {
@@ -136,22 +155,22 @@ function I(i, t) {
     } catch {
     }
 }
-const T = class T extends HTMLElement {
+const q = class q extends HTMLElement {
   constructor() {
-    super(...arguments), this._brand = null, this._ready = !1, this._tab = "ondemand", this._topic = "", this._conceptQuery = "", this._conceptLevel = "all", this._probQuery = "", this._probChip = "all", this._topicsData = [], this._problemsData = [], this._counts = null, this._busy = !1, this._busyMsg = "", this._errorMsg = "", this._expanded = /* @__PURE__ */ new Map(), this._pageState = /* @__PURE__ */ new Map();
+    super(...arguments), this._brand = null, this._ready = !1, this._tab = "ondemand", this._topic = "", this._conceptQuery = "", this._conceptLevel = "all", this._probQuery = "", this._probChip = "all", this._topicHeaders = [], this._topicSectionCache = /* @__PURE__ */ new Map(), this._problemHeaders = [], this._problemSectionCache = /* @__PURE__ */ new Map(), this._counts = null, this._busy = !1, this._busyMsg = "", this._errorMsg = "", this._expanded = /* @__PURE__ */ new Map(), this._pageState = /* @__PURE__ */ new Map();
   }
   // ── Lifecycle ───────────────────────────────────────────────────
   connectedCallback() {
-    O(), this.classList.add("canvasa-tutor", "tutor-root", "tutor-page"), A({ host: $(), tenant: this._tenant() });
+    G(), this.classList.add("canvasa-tutor", "tutor-root", "tutor-page"), j({ host: T(), tenant: this._tenant() });
     const t = this.getAttribute("default-tab") || "ondemand";
     this._tab = t;
-    const e = this.getAttribute("lesson"), o = this.getAttribute("ask");
+    const e = this.getAttribute("lesson"), r = this.getAttribute("ask");
     if (e) {
-      const r = this.getAttribute("lesson-mode") || "teach";
-      this._launch("lesson", { lesson: e, mode: r });
-    } else if (o) {
-      const r = this.getAttribute("lesson-mode") || "teach";
-      this._launch("ask", { ask: o, mode: r });
+      const n = this.getAttribute("lesson-mode") || "teach";
+      this._launch("lesson", { lesson: e, mode: n });
+    } else if (r) {
+      const n = this.getAttribute("lesson-mode") || "teach";
+      this._launch("ask", { ask: r, mode: n });
     }
     this._render(), this._bootstrap();
   }
@@ -159,8 +178,8 @@ const T = class T extends HTMLElement {
     var t;
     (t = this._abort) == null || t.abort();
   }
-  attributeChangedCallback(t, e, o) {
-    !this.isConnected || e === o || (t === "tenant" ? (A({ tenant: this._tenant() }), this._bootstrap()) : t === "default-tab" && o ? (this._tab = o, this._render()) : this._render());
+  attributeChangedCallback(t, e, r) {
+    !this.isConnected || e === r || (t === "tenant" ? (j({ tenant: this._tenant() }), this._bootstrap()) : t === "default-tab" && r ? (this._tab = r, this._render()) : this._render());
   }
   // ── Programmatic API ────────────────────────────────────────────
   setTenant(t) {
@@ -188,21 +207,21 @@ const T = class T extends HTMLElement {
   async _loadBrand() {
     const t = this._tenant();
     try {
-      this._brand = await _.brand(t);
+      this._brand = await x.brand(t);
     } catch (e) {
       this._brand = { tenant: t, tokens: {}, copy: {}, mark: {} }, this._fireError("brand-config-fetch-failed", String(e), e);
     }
   }
   async _loadCounts() {
     try {
-      this._counts = await _.inventoryCounts();
+      this._counts = await x.inventoryCounts();
     } catch (t) {
       this._fireError("inventory-counts-failed", String(t), t);
     }
   }
   _applyBrandTokens() {
-    var o;
-    const t = (o = this._brand) == null ? void 0 : o.tokens;
+    var r;
+    const t = (r = this._brand) == null ? void 0 : r.tokens;
     if (!t) return;
     const e = {
       accent: "--tutor-accent",
@@ -217,9 +236,9 @@ const T = class T extends HTMLElement {
       fontBody: "--tutor-font-body",
       fontMono: "--tutor-font-mono"
     };
-    for (const [r, a] of Object.entries(t)) {
-      const n = e[r] ?? `--tutor-${r}`;
-      typeof a == "string" && this.style.setProperty(n, a);
+    for (const [n, o] of Object.entries(t)) {
+      const a = e[n] ?? `--tutor-${n}`;
+      typeof o == "string" && this.style.setProperty(a, o);
     }
   }
   // ── Render dispatch ─────────────────────────────────────────────
@@ -230,43 +249,43 @@ const T = class T extends HTMLElement {
     return this.getAttribute("debug") === "1";
   }
   _slotText(t) {
-    var o;
+    var r;
     const e = this.querySelector(`[slot="${CSS.escape(t)}"]`);
-    return ((o = e == null ? void 0 : e.textContent) == null ? void 0 : o.trim()) || null;
+    return ((r = e == null ? void 0 : e.textContent) == null ? void 0 : r.trim()) || null;
   }
   _render() {
-    var p, d, b, u;
-    const t = ((p = this._brand) == null ? void 0 : p.copy) ?? {}, e = this._slotText("hero-title") ?? t.heroTitle ?? "What do you want to <em>learn</em> today?", o = this._slotText("hero-sub") ?? t.heroSub ?? "Drop a question.", r = (this.getAttribute("hide-tabs") || "").split(",").map((l) => l.trim()).filter(Boolean), a = ["ondemand", "concepts", "problems"].filter((l) => !r.includes(l)), n = {
+    var h, d, m, y;
+    const t = ((h = this._brand) == null ? void 0 : h.copy) ?? {}, e = this._slotText("hero-title") ?? t.heroTitle ?? "What do you want to <em>learn</em> today?", r = this._slotText("hero-sub") ?? t.heroSub ?? "Drop a question.", n = (this.getAttribute("hide-tabs") || "").split(",").map((u) => u.trim()).filter(Boolean), o = ["ondemand", "concepts", "problems"].filter((u) => !n.includes(u)), a = {
       ondemand: ((d = t.tabs) == null ? void 0 : d.ondemand) ?? "On-demand",
-      concepts: ((b = t.tabs) == null ? void 0 : b.concepts) ?? "Concept library",
-      problems: ((u = t.tabs) == null ? void 0 : u.problems) ?? "Problems"
+      concepts: ((m = t.tabs) == null ? void 0 : m.concepts) ?? "Concept library",
+      problems: ((y = t.tabs) == null ? void 0 : y.problems) ?? "Problems"
     }, s = {
       ondemand: "5 ways",
       concepts: this._counts ? String(this._counts.concepts_total) : "",
       problems: this._counts ? String(this._counts.problems_total) : ""
     };
     this.innerHTML = `
-      <div class="canvasa-tutor__pill" title="Canvas A SDK · ${x}">v${x}</div>
+      <div class="canvasa-tutor__pill" title="Canvas A SDK · ${S}">v${S}</div>
       <section class="tutor-hero">
         <h1>${e}</h1>
-        <p>${h(o)}</p>
+        <p>${b(r)}</p>
       </section>
       <nav class="tutor-tabs" role="tablist">
-        ${a.map((l) => `
-          <button type="button" role="tab" aria-selected="${l === this._tab}"
-                  data-canvasa-tab="${l}"
-                  class="tutor-tab${l === this._tab ? " is-active" : ""}">
-            ${h(n[l])}
-            ${s[l] ? `<span class="tutor-tab__count">${h(s[l])}</span>` : ""}
+        ${o.map((u) => `
+          <button type="button" role="tab" aria-selected="${u === this._tab}"
+                  data-canvasa-tab="${u}"
+                  class="tutor-tab${u === this._tab ? " is-active" : ""}">
+            ${b(a[u])}
+            ${s[u] ? `<span class="tutor-tab__count">${b(s[u])}</span>` : ""}
           </button>`).join("")}
       </nav>
       <div data-canvasa-tabpanel="${this._tab}" class="canvasa-tutor__panel"></div>
       <div class="canvasa-tutor__footer">
         <slot name="footer"></slot>
       </div>
-    `, this.querySelectorAll("[data-canvasa-tab]").forEach((l) => {
-      l.addEventListener("click", () => {
-        const v = l.dataset.canvasaTab;
+    `, this.querySelectorAll("[data-canvasa-tab]").forEach((u) => {
+      u.addEventListener("click", () => {
+        const v = u.dataset.canvasaTab;
         this.setTab(v);
       });
     }), this._injectPillStyle();
@@ -316,19 +335,19 @@ const T = class T extends HTMLElement {
   }
   // ── On-demand tab ───────────────────────────────────────────────
   _renderOnDemand(t) {
-    var c, p;
-    const e = ((c = this._brand) == null ? void 0 : c.copy) ?? {}, o = e.placeholderTopic ?? "e.g. Bernoulli's principle · Lenz's law · Maxwell's equations", r = this._slotText("cta-label") ?? e.ctaLabel ?? "AI Tutor →";
+    var c, h;
+    const e = ((c = this._brand) == null ? void 0 : c.copy) ?? {}, r = e.placeholderTopic ?? "e.g. Bernoulli's principle · Lenz's law · Maxwell's equations", n = this._slotText("cta-label") ?? e.ctaLabel ?? "AI Tutor →";
     t.innerHTML = `
       <section class="tutor-section">
         <h2>Type a topic.</h2>
         <div class="tutor-row">
           <input type="text" class="tutor-input" data-canvasa-topic
-                 placeholder="${m(o)}" value="${m(this._topic)}">
+                 placeholder="${f(r)}" value="${f(this._topic)}">
           <button type="button" class="tutor-btn" data-canvasa-launch-topic ${this._busy || !this._topic.trim() ? "disabled" : ""}>
-            ${this._busy ? "Working…" : h(r)}
+            ${this._busy ? "Working…" : b(n)}
           </button>
         </div>
-        ${this._busyMsg || this._errorMsg ? `<div class="tutor-status${this._errorMsg ? " tutor-status--error" : ""}">${h(this._errorMsg || this._busyMsg)}</div>` : ""}
+        ${this._busyMsg || this._errorMsg ? `<div class="tutor-status${this._errorMsg ? " tutor-status--error" : ""}">${b(this._errorMsg || this._busyMsg)}</div>` : ""}
       </section>
       <section class="tutor-section" data-canvasa-source-picker></section>
       <section class="tutor-section">
@@ -336,16 +355,16 @@ const T = class T extends HTMLElement {
         <div data-canvasa-pdf-drop></div>
       </section>
     `;
-    const a = t.querySelector("[data-canvasa-topic]");
-    a && (a.addEventListener("input", () => {
-      this._topic = a.value;
+    const o = t.querySelector("[data-canvasa-topic]");
+    o && (o.addEventListener("input", () => {
+      this._topic = o.value;
       const d = t.querySelector("[data-canvasa-launch-topic]");
       d && (d.disabled = this._busy || !this._topic.trim());
-    }), a.addEventListener("keydown", (d) => {
+    }), o.addEventListener("keydown", (d) => {
       d.key === "Enter" && this._handleTopicGo();
-    })), (p = t.querySelector("[data-canvasa-launch-topic]")) == null || p.addEventListener("click", () => this._handleTopicGo());
-    const n = t.querySelector("[data-canvasa-source-picker]");
-    n && this._mountSourcePicker(n);
+    })), (h = t.querySelector("[data-canvasa-launch-topic]")) == null || h.addEventListener("click", () => this._handleTopicGo());
+    const a = t.querySelector("[data-canvasa-source-picker]");
+    a && this._mountSourcePicker(a);
     const s = t.querySelector("[data-canvasa-pdf-drop]");
     s && this._mountPdfDrop(s);
   }
@@ -355,7 +374,7 @@ const T = class T extends HTMLElement {
   }
   // Source picker — Internal wiki + External wiki, debounced search
   _mountSourcePicker(t) {
-    let e = "internal", o = "", r = [], a = !1, n = null;
+    let e = "internal", r = "", n = [], o = !1, a = null;
     const s = [
       { key: "internal", lbl: "Internal wiki", sub: "SuperStem Physics + AI + HS concept graphs" },
       { key: "external", lbl: "External wiki", sub: "Wikipedia — live" }
@@ -368,21 +387,21 @@ const T = class T extends HTMLElement {
               <div class="tutor-source__row">
                 <span class="tutor-source__dot"></span>
                 <div>
-                  <div class="tutor-source__lbl">${h(d.lbl)}</div>
-                  <div class="tutor-source__sub">${h(d.sub)}</div>
+                  <div class="tutor-source__lbl">${b(d.lbl)}</div>
+                  <div class="tutor-source__sub">${b(d.sub)}</div>
                 </div>
               </div>
             </button>`).join("")}
         </div>
         <input type="text" class="tutor-input tutor-input--sm" data-canvasa-src-q
-               value="${m(o)}" placeholder="Type to search the selected source…">
-        ${a ? '<div class="tutor-status">Searching…</div>' : ""}
-        ${r.length ? `
+               value="${f(r)}" placeholder="Type to search the selected source…">
+        ${o ? '<div class="tutor-status">Searching…</div>' : ""}
+        ${n.length ? `
           <div class="tutor-results">
-            ${r.slice(0, 10).map((d) => `
-              <button type="button" class="tutor-result" data-canvasa-pick='${m(JSON.stringify({ url: d.url, title: d.title }))}'>
-                <div class="tutor-result__ttl">${h(d.title)}</div>
-                ${d.description || d.desc || d.snippet ? `<div class="tutor-result__desc">${h(d.description || d.desc || d.snippet || "")}</div>` : ""}
+            ${n.slice(0, 10).map((d) => `
+              <button type="button" class="tutor-result" data-canvasa-pick='${f(JSON.stringify({ url: d.url, title: d.title }))}'>
+                <div class="tutor-result__ttl">${b(d.title)}</div>
+                ${d.description || d.desc || d.snippet ? `<div class="tutor-result__desc">${b(d.description || d.desc || d.snippet || "")}</div>` : ""}
               </button>`).join("")}
           </div>` : ""}
         <div class="tutor-hint">
@@ -393,27 +412,27 @@ const T = class T extends HTMLElement {
           e = d.dataset.canvasaSrc, c();
         });
       });
-      const p = t.querySelector("[data-canvasa-src-q]");
-      p == null || p.addEventListener("input", () => {
-        if (o = p.value, n && clearTimeout(n), !o.trim()) {
-          r = [], c();
+      const h = t.querySelector("[data-canvasa-src-q]");
+      h == null || h.addEventListener("input", () => {
+        if (r = h.value, a && clearTimeout(a), !r.trim()) {
+          n = [], c();
           return;
         }
-        n = window.setTimeout(async () => {
-          a = !0, c();
+        a = window.setTimeout(async () => {
+          o = !0, c();
           try {
-            r = (e === "external" ? await _.wikiSearch(o.trim()) : await _.superstemSearch(o.trim())).results || [];
+            n = (e === "external" ? await x.wikiSearch(r.trim()) : await x.superstemSearch(r.trim())).results || [];
           } catch {
-            r = [];
+            n = [];
           } finally {
-            a = !1, c();
+            o = !1, c();
           }
         }, 300);
       }), t.querySelectorAll("[data-canvasa-pick]").forEach((d) => {
         d.addEventListener("click", () => {
           try {
-            const b = JSON.parse(d.dataset.canvasaPick || "{}");
-            b.url && this._launchUrl(b.url, b.title);
+            const m = JSON.parse(d.dataset.canvasaPick || "{}");
+            m.url && this._launchUrl(m.url, m.title);
           } catch {
           }
         });
@@ -428,18 +447,18 @@ const T = class T extends HTMLElement {
         <span>Drop a PDF here, or <u>browse</u></span>
       </label>
     `;
-    const e = t.querySelector("[data-canvasa-pdf-input]"), o = t.querySelector("[data-canvasa-pdf-label]");
+    const e = t.querySelector("[data-canvasa-pdf-input]"), r = t.querySelector("[data-canvasa-pdf-label]");
     e == null || e.addEventListener("change", () => {
-      var a;
-      const r = (a = e.files) == null ? void 0 : a[0];
-      r && this._launchPdf(r);
-    }), o == null || o.addEventListener("dragover", (r) => {
-      r.preventDefault(), o.classList.add("is-drag");
-    }), o == null || o.addEventListener("dragleave", () => o.classList.remove("is-drag")), o == null || o.addEventListener("drop", (r) => {
-      var n, s;
-      r.preventDefault(), o.classList.remove("is-drag");
-      const a = (s = (n = r.dataTransfer) == null ? void 0 : n.files) == null ? void 0 : s[0];
-      a && a.type === "application/pdf" && this._launchPdf(a);
+      var o;
+      const n = (o = e.files) == null ? void 0 : o[0];
+      n && this._launchPdf(n);
+    }), r == null || r.addEventListener("dragover", (n) => {
+      n.preventDefault(), r.classList.add("is-drag");
+    }), r == null || r.addEventListener("dragleave", () => r.classList.remove("is-drag")), r == null || r.addEventListener("drop", (n) => {
+      var a, s;
+      n.preventDefault(), r.classList.remove("is-drag");
+      const o = (s = (a = n.dataTransfer) == null ? void 0 : a.files) == null ? void 0 : s[0];
+      o && o.type === "application/pdf" && this._launchPdf(o);
     });
   }
   // ── Concept library tab ─────────────────────────────────────────
@@ -449,7 +468,7 @@ const T = class T extends HTMLElement {
       <div class="tutor-section__sub" data-canvasa-concepts-sub>Loading…</div>
       <div class="tutor-row" style="margin-bottom: 14px;">
         <input type="text" class="tutor-input tutor-input--sm" data-canvasa-concept-q
-               value="${m(this._conceptQuery)}" placeholder="Search concepts…">
+               value="${f(this._conceptQuery)}" placeholder="Search concepts…">
         <div class="tutor-chip-group" data-canvasa-concept-chips>
           ${["all", "HS", "UG", "G"].map((s) => `
             <button type="button" class="tutor-chip${this._conceptLevel === s ? " is-active" : ""}" data-canvasa-clvl="${s}">${s === "all" ? "All" : s}</button>`).join("")}
@@ -457,100 +476,118 @@ const T = class T extends HTMLElement {
       </div>
       <div data-canvasa-concept-topics></div>
     </section>`;
-    const e = t.querySelector("[data-canvasa-concepts-sub]"), o = t.querySelector("[data-canvasa-concept-topics]");
-    if (!e || !o) return;
+    const e = t.querySelector("[data-canvasa-concepts-sub]"), r = t.querySelector("[data-canvasa-concept-topics]");
+    if (!e || !r) return;
     t.querySelectorAll("[data-canvasa-clvl]").forEach((s) => {
       s.addEventListener("click", () => {
-        this._conceptLevel = s.dataset.canvasaClvl, t.querySelectorAll("[data-canvasa-clvl]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaClvl === this._conceptLevel)), this._rerenderConceptTopics(o);
+        this._conceptLevel = s.dataset.canvasaClvl, t.querySelectorAll("[data-canvasa-clvl]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaClvl === this._conceptLevel)), this._topicSectionCache.clear(), this._pageState.clear(), this._rerenderConceptTopics(r);
       });
     });
-    let r = null;
-    const a = t.querySelector("[data-canvasa-concept-q]");
-    if (a == null || a.addEventListener("input", () => {
-      this._conceptQuery = a.value, r && clearTimeout(r), r = window.setTimeout(() => this._rerenderConceptTopics(o), 180);
-    }), !this._topicsData.length)
+    let n = null;
+    const o = t.querySelector("[data-canvasa-concept-q]");
+    if (o == null || o.addEventListener("input", () => {
+      this._conceptQuery = o.value, n && clearTimeout(n), n = window.setTimeout(() => {
+        this._topicSectionCache.clear(), this._pageState.clear(), this._rerenderConceptTopics(r);
+      }, 220);
+    }), !this._topicHeaders.length)
       try {
-        const s = await _.libraryTopics();
-        this._topicsData = s.topics || [];
+        const s = await x.libraryTopicHeaders();
+        this._topicHeaders = s.topics || [];
       } catch (s) {
         e.textContent = "Failed to load: " + String(s), this._fireError("library-topics-failed", String(s), s);
         return;
       }
-    const n = this._topicsData.reduce((s, c) => s + (c.lessons || []).length, 0);
-    e.textContent = `${n.toLocaleString()} lessons across ${this._topicsData.length} topics — click a section to expand.`, this._rerenderConceptTopics(o);
+    const a = this._topicHeaders.reduce((s, c) => s + (c.count || 0), 0);
+    e.textContent = `${a.toLocaleString()} lessons across ${this._topicHeaders.length} topics — click a section to expand.`, this._rerenderConceptTopics(r);
+  }
+  _conceptLevelCount(t) {
+    switch (this._conceptLevel) {
+      case "HS":
+        return t.hs_count;
+      case "UG":
+        return t.ug_count;
+      case "G":
+        return t.g_count;
+      default:
+        return t.count;
+    }
   }
   _rerenderConceptTopics(t) {
-    const e = this._conceptLevel, o = this._conceptQuery.toLowerCase().trim();
-    t.innerHTML = this._topicsData.map((r, a) => {
-      let n = (r.lessons || []).length;
-      (e !== "all" || o) && (n = (r.lessons || []).filter((p) => {
-        const d = p.level || "HS", b = e === "all" || d === e, u = !o || (p.title || "").toLowerCase().includes(o);
-        return b && u;
-      }).length);
-      const s = this._expanded.get("c:" + a) ?? a === 0, c = e !== "all" || o;
+    const e = this._conceptLevel, r = this._conceptQuery.trim(), n = e !== "all" || !!r;
+    t.innerHTML = this._topicHeaders.map((o, a) => {
+      const s = this._conceptLevelCount(o), c = this._expanded.get("c:" + a) ?? a === 0, h = r ? `${o.count} lessons · search active` : `${s} lesson${s === 1 ? "" : "s"}${n ? ` of ${o.count}` : ""}`, d = e !== "all" && s === 0 && !r;
       return `
-        <div class="tutor-topic${s ? " is-expanded" : ""}" data-canvasa-ctopic="${a}" style="${c && n === 0 ? "display:none;" : ""}">
+        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-ctopic="${a}" data-canvasa-cname="${f(o.name)}" style="${d ? "display:none;" : ""}">
           <div class="tutor-topic__head" data-canvasa-ctoggle="${a}">
-            <span class="tutor-topic__icon">${h(r.icon || "📘")}</span>
-            <span class="tutor-topic__name">${h(r.name)}</span>
-            <span class="tutor-topic__count">${c ? `${n} of ${(r.lessons || []).length} match` : `${n} lessons`}</span>
+            <span class="tutor-topic__icon">${b(o.icon || "📘")}</span>
+            <span class="tutor-topic__name">${b(o.name)}</span>
+            <span class="tutor-topic__count">${b(h)}</span>
             <span class="tutor-topic__chev">▶</span>
           </div>
           <div class="tutor-topic__body" data-canvasa-ctopic-body="${a}" data-rendered="0"></div>
         </div>`;
-    }).join(""), t.querySelectorAll("[data-canvasa-ctoggle]").forEach((r) => {
-      r.addEventListener("click", () => {
-        const a = +(r.dataset.canvasaCtoggle || "0"), n = t.querySelector(`[data-canvasa-ctopic="${a}"]`);
-        if (!n) return;
-        const s = !n.classList.contains("is-expanded");
-        n.classList.toggle("is-expanded", s), this._expanded.set("c:" + a, s), s && this._renderConceptTopicBody(t, a, 0);
+    }).join(""), t.querySelectorAll("[data-canvasa-ctoggle]").forEach((o) => {
+      o.addEventListener("click", () => {
+        const a = +(o.dataset.canvasaCtoggle || "0"), s = t.querySelector(`[data-canvasa-ctopic="${a}"]`);
+        if (!s) return;
+        const c = !s.classList.contains("is-expanded");
+        s.classList.toggle("is-expanded", c), this._expanded.set("c:" + a, c), c && this._renderConceptTopicBody(t, a, 0);
       });
-    }), this._topicsData.forEach((r, a) => {
+    }), this._topicHeaders.forEach((o, a) => {
       (this._expanded.get("c:" + a) ?? a === 0) && this._renderConceptTopicBody(t, a, this._pageState.get("c:" + a) ?? 0);
     });
   }
-  _renderConceptTopicBody(t, e, o) {
-    var b, u;
-    const r = this._topicsData[e];
-    if (!r) return;
-    const a = t.querySelector(`[data-canvasa-ctopic-body="${e}"]`);
-    if (!a) return;
-    const n = this._conceptLevel, s = this._conceptQuery.toLowerCase().trim(), c = (r.lessons || []).filter((l) => {
-      const v = l.level || "HS", z = n === "all" || v === n, H = !s || (l.title || "").toLowerCase().includes(s);
-      return z && H;
-    }), p = Math.max(1, Math.ceil(c.length / f));
-    o < 0 && (o = 0), o >= p && (o = p - 1), this._pageState.set("c:" + e, o);
-    const d = c.slice(o * f, (o + 1) * f);
-    a.innerHTML = `
+  async _renderConceptTopicBody(t, e, r) {
+    var w, $;
+    const n = this._topicHeaders[e];
+    if (!n) return;
+    const o = t.querySelector(`[data-canvasa-ctopic-body="${e}"]`);
+    if (!o) return;
+    const a = this._conceptLevel, s = this._conceptQuery.trim(), c = n.name, h = Math.max(0, r * g), d = this._topicSectionCache.get(c), m = d && d.level === a && d.q === s && d.offset === h && d.limit === g;
+    let y, u;
+    if (m && d)
+      y = d.lessons, u = d.total;
+    else {
+      o.innerHTML = '<div class="tutor-empty">Loading…</div>', o.dataset.rendered = "0";
+      try {
+        const p = await x.libraryTopicSection(n.name, h, g, a, s);
+        y = p.lessons || [], u = p.total || 0, this._topicSectionCache.set(c, { lessons: y, total: u, offset: h, limit: g, level: a, q: s });
+      } catch (p) {
+        o.innerHTML = `<div class="tutor-empty">Failed to load: ${b(String(p))}</div>`, this._fireError("library-topic-section-failed", String(p), p);
+        return;
+      }
+    }
+    const v = Math.max(1, Math.ceil(u / g));
+    r < 0 && (r = 0), r >= v && (r = v - 1), this._pageState.set("c:" + e, r), o.innerHTML = `
       <div class="tutor-card-grid">
-        ${d.map((l) => {
-      const v = l.level || "HS";
-      return `<button type="button" class="tutor-card" data-canvasa-lesson="${m(l.slug)}" data-canvasa-cached="${l.cached ? "1" : "0"}" data-canvasa-title="${m(l.title)}" data-canvasa-source="concept">
-            <div class="tutor-card__title">${h(l.title)}</div>
+        ${y.map((p) => {
+      const C = p.level || "HS";
+      return `<button type="button" class="tutor-card" data-canvasa-lesson="${f(p.slug)}" data-canvasa-cached="${p.cached ? "1" : "0"}" data-canvasa-title="${f(p.title)}" data-canvasa-source="concept">
+            <div class="tutor-card__title">${b(p.title)}</div>
             <div class="tutor-card__meta">
-              <span>${h(v)}</span>
-              ${l.cached ? '<span class="tutor-card__cached">✓ cached</span>' : ""}
-              ${l.guide_cached ? '<span class="tutor-card__guide">⚡ guide</span>' : ""}
+              <span>${b(C)}</span>
+              ${p.cached ? '<span class="tutor-card__cached">✓ cached</span>' : ""}
+              ${p.guide_cached ? '<span class="tutor-card__guide">⚡ guide</span>' : ""}
             </div>
           </button>`;
     }).join("")}
       </div>
-      ${c.length > f ? `
+      ${u > g ? `
         <div class="tutor-pag">
-          <button type="button" data-canvasa-cpag-prev ${o <= 0 ? "disabled" : ""}>← Prev</button>
-          <span>Page ${o + 1} of ${p} · ${c.length} lesson${c.length === 1 ? "" : "s"}</span>
-          <button type="button" data-canvasa-cpag-next ${o >= p - 1 ? "disabled" : ""}>Next →</button>
-        </div>` : c.length === 0 ? '<div class="tutor-empty">No matches in this topic.</div>' : ""}
-    `, a.dataset.rendered = "1", (b = a.querySelector("[data-canvasa-cpag-prev]")) == null || b.addEventListener("click", (l) => {
-      l.stopPropagation(), this._renderConceptTopicBody(t, e, o - 1);
-    }), (u = a.querySelector("[data-canvasa-cpag-next]")) == null || u.addEventListener("click", (l) => {
-      l.stopPropagation(), this._renderConceptTopicBody(t, e, o + 1);
-    }), a.querySelectorAll("[data-canvasa-lesson]").forEach((l) => {
-      l.addEventListener("click", () => {
+          <button type="button" data-canvasa-cpag-prev ${r <= 0 ? "disabled" : ""}>← Prev</button>
+          <span>Page ${r + 1} of ${v} · ${u} lesson${u === 1 ? "" : "s"}</span>
+          <button type="button" data-canvasa-cpag-next ${r >= v - 1 ? "disabled" : ""}>Next →</button>
+        </div>` : u === 0 ? '<div class="tutor-empty">No matches in this topic.</div>' : ""}
+    `, o.dataset.rendered = "1", (w = o.querySelector("[data-canvasa-cpag-prev]")) == null || w.addEventListener("click", (p) => {
+      p.stopPropagation(), this._renderConceptTopicBody(t, e, r - 1);
+    }), ($ = o.querySelector("[data-canvasa-cpag-next]")) == null || $.addEventListener("click", (p) => {
+      p.stopPropagation(), this._renderConceptTopicBody(t, e, r + 1);
+    }), o.querySelectorAll("[data-canvasa-lesson]").forEach((p) => {
+      p.addEventListener("click", () => {
         this._handleLessonCardClick({
-          slug: l.dataset.canvasaLesson || "",
-          title: l.dataset.canvasaTitle || "",
-          cached: l.dataset.canvasaCached === "1",
+          slug: p.dataset.canvasaLesson || "",
+          title: p.dataset.canvasaTitle || "",
+          cached: p.dataset.canvasaCached === "1",
           source: "concept"
         });
       });
@@ -563,7 +600,7 @@ const T = class T extends HTMLElement {
       <div class="tutor-section__sub" data-canvasa-problems-sub>Loading…</div>
       <div class="tutor-row" style="margin-bottom: 14px;">
         <input type="text" class="tutor-input tutor-input--sm" data-canvasa-prob-q
-               value="${m(this._probQuery)}" placeholder="Search problems…">
+               value="${f(this._probQuery)}" placeholder="Search problems…">
         <div class="tutor-chip-group" data-canvasa-prob-chips>
           ${["all", "HS", "UG", "G", "Olympiad", "cached"].map((s) => `
             <button type="button" class="tutor-chip${this._probChip === s ? " is-active" : ""}" data-canvasa-pchip="${s}">${s === "all" ? "All" : s === "cached" ? "✓" : s}</button>`).join("")}
@@ -571,128 +608,163 @@ const T = class T extends HTMLElement {
       </div>
       <div data-canvasa-problem-sections></div>
     </section>`;
-    const e = t.querySelector("[data-canvasa-problems-sub]"), o = t.querySelector("[data-canvasa-problem-sections]");
-    if (!e || !o) return;
+    const e = t.querySelector("[data-canvasa-problems-sub]"), r = t.querySelector("[data-canvasa-problem-sections]");
+    if (!e || !r) return;
     t.querySelectorAll("[data-canvasa-pchip]").forEach((s) => {
       s.addEventListener("click", () => {
-        this._probChip = s.dataset.canvasaPchip, t.querySelectorAll("[data-canvasa-pchip]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaPchip === this._probChip)), this._rerenderProblemSections(o);
+        this._probChip = s.dataset.canvasaPchip, t.querySelectorAll("[data-canvasa-pchip]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaPchip === this._probChip)), this._problemSectionCache.clear(), this._pageState.clear(), this._rerenderProblemSections(r);
       });
     });
-    let r = null;
-    const a = t.querySelector("[data-canvasa-prob-q]");
-    if (a == null || a.addEventListener("input", () => {
-      this._probQuery = a.value, r && clearTimeout(r), r = window.setTimeout(() => this._rerenderProblemSections(o), 180);
-    }), !this._problemsData.length)
+    let n = null;
+    const o = t.querySelector("[data-canvasa-prob-q]");
+    if (o == null || o.addEventListener("input", () => {
+      this._probQuery = o.value, n && clearTimeout(n), n = window.setTimeout(() => {
+        this._problemSectionCache.clear(), this._pageState.clear(), this._rerenderProblemSections(r);
+      }, 220);
+    }), !this._problemHeaders.length)
       try {
-        const s = await _.problemsLibrary();
-        this._problemsData = s.sections || [];
+        const s = await x.problemsLibraryHeaders();
+        this._problemHeaders = s.sections || [];
       } catch (s) {
         e.textContent = "Failed to load: " + String(s), this._fireError("problems-library-failed", String(s), s);
         return;
       }
-    const n = this._problemsData.reduce((s, c) => s + (c.problems || []).length, 0);
-    e.textContent = `${n.toLocaleString()} problems across ${this._problemsData.length} sections — click a section to expand.`, this._rerenderProblemSections(o);
+    const a = this._problemHeaders.reduce((s, c) => s + (c.count || 0), 0);
+    e.textContent = `${a.toLocaleString()} problems across ${this._problemHeaders.length} sections — click a section to expand.`, this._rerenderProblemSections(r);
   }
-  _filterProblems(t) {
-    const e = this._probChip, o = this._probQuery.toLowerCase().trim();
-    return (t.problems || []).filter((r) => {
-      let a = e === "all";
-      a || (e === "cached" ? a = !!r.cached : e === "Olympiad" ? a = r.origin === "physolympiad" || r.source_kind === "olympiad" : a = (r.level || "UG") === e);
-      const n = !o || (r.title || "").toLowerCase().includes(o) || (r.statement || "").toLowerCase().includes(o);
-      return a && n;
-    });
+  _probChipToLevel() {
+    switch (this._probChip) {
+      case "HS":
+      case "UG":
+      case "G":
+        return this._probChip;
+      case "Olympiad":
+        return "olympiad";
+      case "cached":
+        return "cached";
+      default:
+        return "all";
+    }
+  }
+  _problemChipCount(t) {
+    switch (this._probChip) {
+      case "HS":
+        return t.hs_count;
+      case "UG":
+        return t.ug_count;
+      case "G":
+        return t.g_count;
+      case "Olympiad":
+        return t.olympiad_count;
+      case "cached":
+        return t.cached_count;
+      default:
+        return t.count;
+    }
   }
   _rerenderProblemSections(t) {
-    const e = this._probChip !== "all" || !!this._probQuery;
-    t.innerHTML = this._problemsData.map((o, r) => {
-      const a = e ? this._filterProblems(o).length : (o.problems || []).length;
+    const e = this._probChip, r = this._probQuery.trim(), n = e !== "all" || !!r;
+    t.innerHTML = this._problemHeaders.map((o, a) => {
+      const s = this._problemChipCount(o), c = this._expanded.get("p:" + a) ?? a === 0, h = r ? `${o.count} problems · search active` : `${s} problem${s === 1 ? "" : "s"}${n ? ` of ${o.count}` : ""}`, d = e !== "all" && s === 0 && !r;
       return `
-        <div class="tutor-topic${this._expanded.get("p:" + r) ?? r === 0 ? " is-expanded" : ""}" data-canvasa-psec="${r}" style="${e && a === 0 ? "display:none;" : ""}">
-          <div class="tutor-topic__head" data-canvasa-ptoggle="${r}">
-            <span class="tutor-topic__icon">${h(o.icon || "📘")}</span>
-            <span class="tutor-topic__name">${h(o.name)}</span>
-            <span class="tutor-topic__count">${e ? `${a} of ${(o.problems || []).length} match` : `${a} problem${a === 1 ? "" : "s"}`}</span>
+        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-psec="${a}" data-canvasa-pname="${f(o.name)}" style="${d ? "display:none;" : ""}">
+          <div class="tutor-topic__head" data-canvasa-ptoggle="${a}">
+            <span class="tutor-topic__icon">${b(o.icon || "📘")}</span>
+            <span class="tutor-topic__name">${b(o.name)}</span>
+            <span class="tutor-topic__count">${b(h)}</span>
             <span class="tutor-topic__chev">▶</span>
           </div>
-          <div class="tutor-topic__body" data-canvasa-psec-body="${r}" data-rendered="0"></div>
+          <div class="tutor-topic__body" data-canvasa-psec-body="${a}" data-rendered="0"></div>
         </div>`;
     }).join(""), t.querySelectorAll("[data-canvasa-ptoggle]").forEach((o) => {
       o.addEventListener("click", () => {
-        const r = +(o.dataset.canvasaPtoggle || "0"), a = t.querySelector(`[data-canvasa-psec="${r}"]`);
-        if (!a) return;
-        const n = !a.classList.contains("is-expanded");
-        a.classList.toggle("is-expanded", n), this._expanded.set("p:" + r, n), n && this._renderProblemSectionBody(t, r, 0);
+        const a = +(o.dataset.canvasaPtoggle || "0"), s = t.querySelector(`[data-canvasa-psec="${a}"]`);
+        if (!s) return;
+        const c = !s.classList.contains("is-expanded");
+        s.classList.toggle("is-expanded", c), this._expanded.set("p:" + a, c), c && this._renderProblemSectionBody(t, a, 0);
       });
-    }), this._problemsData.forEach((o, r) => {
-      (this._expanded.get("p:" + r) ?? r === 0) && this._renderProblemSectionBody(t, r, this._pageState.get("p:" + r) ?? 0);
+    }), this._problemHeaders.forEach((o, a) => {
+      (this._expanded.get("p:" + a) ?? a === 0) && this._renderProblemSectionBody(t, a, this._pageState.get("p:" + a) ?? 0);
     });
   }
-  async _renderProblemSectionBody(t, e, o) {
-    var d, b;
-    const r = this._problemsData[e];
-    if (!r) return;
-    const a = t.querySelector(`[data-canvasa-psec-body="${e}"]`);
-    if (!a) return;
-    const n = this._filterProblems(r), s = Math.max(1, Math.ceil(n.length / f));
-    o < 0 && (o = 0), o >= s && (o = s - 1), this._pageState.set("p:" + e, o);
-    const c = n.slice(o * f, (o + 1) * f);
-    a.innerHTML = `
+  async _renderProblemSectionBody(t, e, r) {
+    var p, C;
+    const n = this._problemHeaders[e];
+    if (!n) return;
+    const o = t.querySelector(`[data-canvasa-psec-body="${e}"]`);
+    if (!o) return;
+    const a = this._probChip, s = this._probChipToLevel(), c = this._probQuery.trim(), h = n.name, d = Math.max(0, r * g), m = this._problemSectionCache.get(h), y = m && m.chip === a && m.q === c && m.offset === d && m.limit === g;
+    let u, v;
+    if (y && m)
+      u = m.problems, v = m.total;
+    else {
+      o.innerHTML = '<div class="tutor-empty">Loading…</div>', o.dataset.rendered = "0";
+      try {
+        const l = await x.problemsLibrarySection(n.name, d, g, s, c);
+        u = l.problems || [], v = l.total || 0, this._problemSectionCache.set(h, { problems: u, total: v, offset: d, limit: g, chip: a, q: c });
+      } catch (l) {
+        o.innerHTML = `<div class="tutor-empty">Failed to load: ${b(String(l))}</div>`, this._fireError("problems-library-section-failed", String(l), l);
+        return;
+      }
+    }
+    const w = Math.max(1, Math.ceil(v / g));
+    r < 0 && (r = 0), r >= w && (r = w - 1), this._pageState.set("p:" + e, r), o.innerHTML = `
       <div class="tutor-prob-list">
-        ${c.map((u) => {
-      const l = u.level || "UG", v = u.difficulty || "medium";
-      return `<button type="button" class="tutor-prob" data-canvasa-lesson="${m(u.slug)}" data-canvasa-cached="${u.cached ? "1" : "0"}" data-canvasa-title="${m(u.title)}" data-canvasa-source="problem" data-canvasa-statement="${m(u.statement || "")}">
+        ${u.map((l) => {
+      const I = l.level || "UG", z = l.difficulty || "medium";
+      return `<button type="button" class="tutor-prob" data-canvasa-lesson="${f(l.slug)}" data-canvasa-cached="${l.cached ? "1" : "0"}" data-canvasa-title="${f(l.title)}" data-canvasa-source="problem" data-canvasa-statement="${f(l.statement || "")}">
             <div class="tutor-prob__head">
-              <span class="tutor-prob__title">${h(u.title)}</span>
-              <span class="tutor-pill tutor-pill--${m(v)}">${h(v)}</span>
-              <span class="tutor-pill">${h(l)}</span>
-              ${u.source ? `<span class="tutor-prob__src">· ${h(u.source)}</span>` : ""}
-              ${u.cached ? '<span class="tutor-prob__cached" title="Cached — instant load">✓</span>' : ""}
-              ${u.guide_cached ? '<span class="tutor-prob__guide" title="Figure-It-Out cached">⚡</span>' : ""}
+              <span class="tutor-prob__title">${b(l.title)}</span>
+              <span class="tutor-pill tutor-pill--${f(z)}">${b(z)}</span>
+              <span class="tutor-pill">${b(I)}</span>
+              ${l.source ? `<span class="tutor-prob__src">· ${b(l.source)}</span>` : ""}
+              ${l.cached ? '<span class="tutor-prob__cached" title="Cached — instant load">✓</span>' : ""}
+              ${l.guide_cached ? '<span class="tutor-prob__guide" title="Figure-It-Out cached">⚡</span>' : ""}
             </div>
-            ${u.statement ? `<div class="tutor-prob__statement">${u.statement}</div>` : ""}
+            ${l.statement ? `<div class="tutor-prob__statement">${l.statement}</div>` : ""}
           </button>`;
     }).join("")}
       </div>
-      ${n.length > f ? `
+      ${v > g ? `
         <div class="tutor-pag">
-          <button type="button" data-canvasa-ppag-prev ${o <= 0 ? "disabled" : ""}>← Prev</button>
-          <span>Page ${o + 1} of ${s} · ${n.length} result${n.length === 1 ? "" : "s"}</span>
-          <button type="button" data-canvasa-ppag-next ${o >= s - 1 ? "disabled" : ""}>Next →</button>
-        </div>` : n.length === 0 ? '<div class="tutor-empty">No matches in this section.</div>' : ""}
-    `, a.dataset.rendered = "1", (d = a.querySelector("[data-canvasa-ppag-prev]")) == null || d.addEventListener("click", (u) => {
-      u.stopPropagation(), this._renderProblemSectionBody(t, e, o - 1);
-    }), (b = a.querySelector("[data-canvasa-ppag-next]")) == null || b.addEventListener("click", (u) => {
-      u.stopPropagation(), this._renderProblemSectionBody(t, e, o + 1);
-    }), a.querySelectorAll("[data-canvasa-lesson]").forEach((u) => {
-      u.addEventListener("click", () => {
+          <button type="button" data-canvasa-ppag-prev ${r <= 0 ? "disabled" : ""}>← Prev</button>
+          <span>Page ${r + 1} of ${w} · ${v} result${v === 1 ? "" : "s"}</span>
+          <button type="button" data-canvasa-ppag-next ${r >= w - 1 ? "disabled" : ""}>Next →</button>
+        </div>` : v === 0 ? '<div class="tutor-empty">No matches in this section.</div>' : ""}
+    `, o.dataset.rendered = "1", (p = o.querySelector("[data-canvasa-ppag-prev]")) == null || p.addEventListener("click", (l) => {
+      l.stopPropagation(), this._renderProblemSectionBody(t, e, r - 1);
+    }), (C = o.querySelector("[data-canvasa-ppag-next]")) == null || C.addEventListener("click", (l) => {
+      l.stopPropagation(), this._renderProblemSectionBody(t, e, r + 1);
+    }), o.querySelectorAll("[data-canvasa-lesson]").forEach((l) => {
+      l.addEventListener("click", () => {
         this._handleLessonCardClick({
-          slug: u.dataset.canvasaLesson || "",
-          title: u.dataset.canvasaTitle || "",
-          cached: u.dataset.canvasaCached === "1",
+          slug: l.dataset.canvasaLesson || "",
+          title: l.dataset.canvasaTitle || "",
+          cached: l.dataset.canvasaCached === "1",
           source: "problem",
-          statement: u.dataset.canvasaStatement || ""
+          statement: l.dataset.canvasaStatement || ""
         });
       });
     });
-    const p = await B(this.getAttribute("katex-cdn"));
-    I(a, p);
+    const $ = await N(this.getAttribute("katex-cdn"));
+    W(o, $);
   }
   // ── Lesson card click → mode picker → launch ────────────────────
   _handleLessonCardClick(t) {
-    const e = this.getAttribute("lesson-mode") || "picker", o = new CustomEvent("canvasa-lesson-click", {
+    const e = this.getAttribute("lesson-mode") || "picker", r = new CustomEvent("canvasa-lesson-click", {
       detail: { ...t, mode: e },
       bubbles: !0,
       composed: !0,
       cancelable: !0
     });
-    this.dispatchEvent(o) && (e === "teach" || e === "guide" ? this._launch("lesson", { lesson: t.slug, mode: e, statement: t.statement ?? "" }) : this._openModePicker(t));
+    this.dispatchEvent(r) && (e === "teach" || e === "guide" ? this._launch("lesson", { lesson: t.slug, mode: e, statement: t.statement ?? "" }) : this._openModePicker(t));
   }
   _openModePicker(t) {
-    var a;
+    var o;
     const e = document.createElement("div");
     e.className = "tutor-mode-modal", e.innerHTML = `
       <div class="tutor-mode-modal__card" role="dialog" aria-label="Pick a learning mode">
-        <h3 class="tutor-mode-modal__title">${h(t.title || "Pick a learning mode")}</h3>
+        <h3 class="tutor-mode-modal__title">${b(t.title || "Pick a learning mode")}</h3>
         <p class="tutor-mode-modal__sub">Two ways to learn this — pick what suits you.</p>
         <div class="tutor-mode-modal__opts">
           <button type="button" class="tutor-mode-modal__opt" data-mode="teach">
@@ -707,51 +779,51 @@ const T = class T extends HTMLElement {
         <button type="button" class="tutor-mode-modal__close" data-cancel>Cancel</button>
       </div>
     `, document.body.appendChild(e);
-    const o = () => e.remove();
-    e.addEventListener("click", (n) => {
-      n.target === e && o();
-    }), (a = e.querySelector("[data-cancel]")) == null || a.addEventListener("click", o), e.querySelectorAll("[data-mode]").forEach((n) => {
-      n.addEventListener("click", () => {
-        const s = n.dataset.mode || "teach";
-        o(), t.slug ? this._launch("lesson", { lesson: t.slug, mode: s, statement: t.statement ?? "" }) : t.statement && this._launch("ask", { ask: t.statement, mode: s });
+    const r = () => e.remove();
+    e.addEventListener("click", (a) => {
+      a.target === e && r();
+    }), (o = e.querySelector("[data-cancel]")) == null || o.addEventListener("click", r), e.querySelectorAll("[data-mode]").forEach((a) => {
+      a.addEventListener("click", () => {
+        const s = a.dataset.mode || "teach";
+        r(), t.slug ? this._launch("lesson", { lesson: t.slug, mode: s, statement: t.statement ?? "" }) : t.statement && this._launch("ask", { ask: t.statement, mode: s });
       });
     });
-    const r = (n) => {
-      n.key === "Escape" && (o(), document.removeEventListener("keydown", r));
+    const n = (a) => {
+      a.key === "Escape" && (r(), document.removeEventListener("keydown", n));
     };
-    document.addEventListener("keydown", r);
+    document.addEventListener("keydown", n);
   }
   // ── Launch (redirect to /tutor or /guide) ───────────────────────
   _launch(t, e) {
-    const o = new CustomEvent("canvasa-launch", {
+    const r = new CustomEvent("canvasa-launch", {
       detail: { kind: t, payload: e },
       bubbles: !0,
       composed: !0,
       cancelable: !0
     });
-    if (!this.dispatchEvent(o)) return;
-    const a = (e.mode === "guide" ? "guide" : "tutor") === "guide" ? "/guide" : "/tutor", n = new URLSearchParams();
-    if (e.lesson && n.set("lesson", e.lesson), e.ask && n.set("ask", e.ask), n.set("brand", this._tenant()), typeof window < "u" && window.location) {
-      n.set("return", window.location.href);
-      const s = `${$()}${a}?${n.toString()}`, c = this.getAttribute("lesson-target") || "self";
+    if (!this.dispatchEvent(r)) return;
+    const o = (e.mode === "guide" ? "guide" : "tutor") === "guide" ? "/guide" : "/tutor", a = new URLSearchParams();
+    if (e.lesson && a.set("lesson", e.lesson), e.ask && a.set("ask", e.ask), a.set("brand", this._tenant()), typeof window < "u" && window.location) {
+      a.set("return", window.location.href);
+      const s = `${T()}${o}?${a.toString()}`, c = this.getAttribute("lesson-target") || "self";
       if (c === "blank")
         window.open(s, "_blank", "noopener");
       else if (c.startsWith(".") || c.startsWith("#")) {
-        const p = document.querySelector(c);
-        p && "src" in p && (p.src = s);
+        const h = document.querySelector(c);
+        h && "src" in h && (h.src = s);
       } else
         window.location.assign(s);
     }
   }
   _launchUrl(t, e) {
     this._busy = !0, this._busyMsg = "Opening tutor…", this._render();
-    const o = new URLSearchParams();
-    o.set("ask", e && e.trim() || t), o.set("brand", this._tenant()), typeof window < "u" && window.location && o.set("return", window.location.href), window.location.assign(`${$()}/tutor?${o.toString()}`);
+    const r = new URLSearchParams();
+    r.set("ask", e && e.trim() || t), r.set("brand", this._tenant()), typeof window < "u" && window.location && r.set("return", window.location.href), window.location.assign(`${T()}/tutor?${r.toString()}`);
   }
   async _launchPdf(t) {
     this._busy = !0, this._busyMsg = "Reading PDF…", this._errorMsg = "", this._render();
     try {
-      const e = await _.generateFromPdf(t);
+      const e = await x.generateFromPdf(t);
       e.ready_url ? window.location.assign(e.ready_url) : (this._busyMsg = "Building from PDF — first beat in ~12-18s…", this._render());
     } catch (e) {
       this._errorMsg = "PDF upload failed: " + String(e), this._busy = !1, this._render(), this._fireError("pdf-upload-failed", String(e), e);
@@ -767,20 +839,20 @@ const T = class T extends HTMLElement {
   }
   _markReady() {
     this._ready || (this._ready = !0, this.dispatchEvent(new CustomEvent("canvasa-ready", {
-      detail: { version: x, tenant: this._tenant() },
+      detail: { version: S, tenant: this._tenant() },
       bubbles: !0,
       composed: !0
     })), this._debug() && console.log("[canvasa] ready", { tenant: this._tenant(), brand: this._brand, counts: this._counts }));
   }
-  _fireError(t, e, o) {
+  _fireError(t, e, r) {
     this.dispatchEvent(new CustomEvent("canvasa-error", {
-      detail: { code: t, message: e, cause: o },
+      detail: { code: t, message: e, cause: r },
       bubbles: !0,
       composed: !0
     })), this._debug() && console.warn("[canvasa] error", t, e);
   }
 };
-T.observedAttributes = [
+q.observedAttributes = [
   "tenant",
   "mode",
   "default-tab",
@@ -793,12 +865,12 @@ T.observedAttributes = [
   "katex-cdn",
   "debug"
 ];
-let C = T;
-function U() {
-  typeof window > "u" || window.customElements.get("canvasa-tutor") || window.customElements.define("canvasa-tutor", C);
+let A = q;
+function R() {
+  typeof window > "u" || window.customElements.get("canvasa-tutor") || window.customElements.define("canvasa-tutor", A);
 }
-const F = "https://canvasa.olympiz.ai", N = "default";
-class G extends HTMLElement {
+const V = "https://canvasa.olympiz.ai", Q = "default";
+class J extends HTMLElement {
   constructor() {
     super(...arguments), this._iframe = null, this._onMessage = this._handleMessage.bind(this), this._ready = !1;
   }
@@ -819,8 +891,8 @@ class G extends HTMLElement {
     return this._buildUrl();
   }
   _buildUrl() {
-    const t = (this.getAttribute("host") || F).replace(/\/$/, ""), o = (this.getAttribute("mode") || "teach").toLowerCase() === "guide" ? "/guide" : "/tutor", r = (this.getAttribute("lesson") || "").trim(), a = (this.getAttribute("tenant") || N).trim(), n = (this.getAttribute("return-url") || "").trim(), s = new URLSearchParams();
-    return r && s.set("lesson", r), s.set("brand", a), n && s.set("return", n), `${t}${o}?${s.toString()}`;
+    const t = (this.getAttribute("host") || V).replace(/\/$/, ""), r = (this.getAttribute("mode") || "teach").toLowerCase() === "guide" ? "/guide" : "/tutor", n = (this.getAttribute("lesson") || "").trim(), o = (this.getAttribute("tenant") || Q).trim(), a = (this.getAttribute("return-url") || "").trim(), s = new URLSearchParams();
+    return n && s.set("lesson", n), s.set("brand", o), a && s.set("return", a), `${t}${r}?${s.toString()}`;
   }
   _render() {
     const t = (this.getAttribute("lesson") || "").trim();
@@ -834,20 +906,20 @@ class G extends HTMLElement {
       return;
     }
     for (this.style.position || (this.style.position = "relative"), this.style.display || (this.style.display = "block"), this.style.width || (this.style.width = "100%"), this.style.minHeight || (this.style.minHeight = "600px"); this.firstChild; ) this.removeChild(this.firstChild);
-    const o = document.createElement("iframe");
-    o.src = e, o.title = "Canvas A — Lesson", o.setAttribute("allow", "autoplay; microphone; clipboard-write"), o.setAttribute("allowfullscreen", ""), o.style.cssText = "width:100%; height:100%; min-height:inherit; border:0; display:block; background:#0d1620;", o.addEventListener("load", () => {
+    const r = document.createElement("iframe");
+    r.src = e, r.title = "Canvas A — Lesson", r.setAttribute("allow", "autoplay; microphone; clipboard-write"), r.setAttribute("allowfullscreen", ""), r.style.cssText = "width:100%; height:100%; min-height:inherit; border:0; display:block; background:#0d1620;", r.addEventListener("load", () => {
       this._ready = !0, this.dispatchEvent(new CustomEvent("canvasa-ready", {
         bubbles: !0,
         composed: !0,
-        detail: { version: x, lesson: t, mode: this.getAttribute("mode") || "teach" }
+        detail: { version: S, lesson: t, mode: this.getAttribute("mode") || "teach" }
       }));
-    }), o.addEventListener("error", () => {
+    }), r.addEventListener("error", () => {
       this.dispatchEvent(new CustomEvent("canvasa-error", {
         bubbles: !0,
         composed: !0,
         detail: { code: "chalkboard-load-failed", message: "Iframe failed to load", cause: { url: e } }
       }));
-    }), this.appendChild(o), this._iframe = o;
+    }), this.appendChild(r), this._iframe = r;
   }
   _renderError(t) {
     for (; this.firstChild; ) this.removeChild(this.firstChild);
@@ -862,31 +934,31 @@ class G extends HTMLElement {
     if (!this._iframe || t.source !== this._iframe.contentWindow) return;
     const e = t.data;
     if (!e || typeof e != "object") return;
-    const o = e.type;
-    o === "canvasa:close" || o === "canvas-a:close" ? this.dispatchEvent(new CustomEvent("canvasa-chalkboard-close", {
+    const r = e.type;
+    r === "canvasa:close" || r === "canvas-a:close" ? this.dispatchEvent(new CustomEvent("canvasa-chalkboard-close", {
       bubbles: !0,
       composed: !0,
       detail: e
-    })) : o === "canvasa:lesson-complete" ? this.dispatchEvent(new CustomEvent("canvasa-chalkboard-complete", {
+    })) : r === "canvasa:lesson-complete" ? this.dispatchEvent(new CustomEvent("canvasa-chalkboard-complete", {
       bubbles: !0,
       composed: !0,
       detail: e
-    })) : o === "canvasa:ready" && !this._ready && (this._ready = !0, this.dispatchEvent(new CustomEvent("canvasa-ready", {
+    })) : r === "canvasa:ready" && !this._ready && (this._ready = !0, this.dispatchEvent(new CustomEvent("canvasa-ready", {
       bubbles: !0,
       composed: !0,
       detail: e
     })));
   }
 }
-typeof customElements < "u" && !customElements.get("canvasa-chalkboard") && customElements.define("canvasa-chalkboard", G);
-class L extends HTMLElement {
+typeof customElements < "u" && !customElements.get("canvasa-chalkboard") && customElements.define("canvasa-chalkboard", J);
+class H extends HTMLElement {
   connectedCallback() {
     this.isConnected && (this._renderStub(), queueMicrotask(() => {
       this.dispatchEvent(new CustomEvent("canvasa-ready", {
         bubbles: !0,
         composed: !0,
         detail: {
-          version: x,
+          version: S,
           status: "stub",
           capability: this._stubMeta().capability,
           plannedVersion: this._stubMeta().plannedVersion
@@ -907,19 +979,19 @@ class L extends HTMLElement {
       "text-align:left",
       "box-shadow:0 2px 18px rgba(0,0,0,0.18)"
     ].join(";");
-    const o = document.createElement("div");
-    o.style.cssText = "display:inline-block; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; opacity:0.7; margin-bottom:8px;", o.textContent = `Canvas A SDK · ${t.capability}`, e.appendChild(o);
     const r = document.createElement("div");
-    r.style.cssText = "font-size:20px; font-weight:600; margin-bottom:6px; color:var(--tutor-accent, currentColor);", r.textContent = `Coming in ${t.plannedVersion}`, e.appendChild(r);
-    const a = document.createElement("div");
-    if (a.style.cssText = "opacity:0.85; max-width:60ch;", a.textContent = t.description, e.appendChild(a), t.docsHref) {
-      const n = document.createElement("a");
-      n.href = t.docsHref, n.target = "_blank", n.rel = "noopener", n.textContent = "Read the contract →", n.style.cssText = "display:inline-block; margin-top:14px; color:var(--tutor-accent, #f6d77a); text-decoration:none; font-size:13px;", e.appendChild(n);
+    r.style.cssText = "display:inline-block; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; opacity:0.7; margin-bottom:8px;", r.textContent = `Canvas A SDK · ${t.capability}`, e.appendChild(r);
+    const n = document.createElement("div");
+    n.style.cssText = "font-size:20px; font-weight:600; margin-bottom:6px; color:var(--tutor-accent, currentColor);", n.textContent = `Coming in ${t.plannedVersion}`, e.appendChild(n);
+    const o = document.createElement("div");
+    if (o.style.cssText = "opacity:0.85; max-width:60ch;", o.textContent = t.description, e.appendChild(o), t.docsHref) {
+      const a = document.createElement("a");
+      a.href = t.docsHref, a.target = "_blank", a.rel = "noopener", a.textContent = "Read the contract →", a.style.cssText = "display:inline-block; margin-top:14px; color:var(--tutor-accent, #f6d77a); text-decoration:none; font-size:13px;", e.appendChild(a);
     }
     this.appendChild(e);
   }
 }
-class W extends L {
+class K extends H {
   static get observedAttributes() {
     return ["problem", "host", "tenant", "mode", "level", "return-url"];
   }
@@ -932,8 +1004,8 @@ class W extends L {
     };
   }
 }
-typeof customElements < "u" && !customElements.get("canvasa-problem-walker") && customElements.define("canvasa-problem-walker", W);
-class R extends L {
+typeof customElements < "u" && !customElements.get("canvasa-problem-walker") && customElements.define("canvasa-problem-walker", K);
+class X extends H {
   static get observedAttributes() {
     return ["domain", "level", "host", "tenant", "user-id", "compact", "highlight"];
   }
@@ -946,8 +1018,8 @@ class R extends L {
     };
   }
 }
-typeof customElements < "u" && !customElements.get("canvasa-skill-tree") && customElements.define("canvasa-skill-tree", R);
-class Q extends L {
+typeof customElements < "u" && !customElements.get("canvasa-skill-tree") && customElements.define("canvasa-skill-tree", X);
+class Y extends H {
   static get observedAttributes() {
     return ["host", "tenant", "voice", "topic-context", "user-id", "open"];
   }
@@ -960,14 +1032,14 @@ class Q extends L {
     };
   }
 }
-typeof customElements < "u" && !customElements.get("canvasa-coach-chat") && customElements.define("canvasa-coach-chat", Q);
-U();
-typeof window < "u" && (window.canvasa = window.canvasa ?? { version: x });
+typeof customElements < "u" && !customElements.get("canvasa-coach-chat") && customElements.define("canvasa-coach-chat", Y);
+R();
+typeof window < "u" && (window.canvasa = window.canvasa ?? { version: S });
 export {
-  x as CANVASA_SDK_VERSION,
-  G as CanvasaChalkboardElement,
-  Q as CanvasaCoachChatElement,
-  W as CanvasaProblemWalkerElement,
-  R as CanvasaSkillTreeElement
+  S as CANVASA_SDK_VERSION,
+  J as CanvasaChalkboardElement,
+  Y as CanvasaCoachChatElement,
+  K as CanvasaProblemWalkerElement,
+  X as CanvasaSkillTreeElement
 };
 //# sourceMappingURL=canvasa-sdk.js.map

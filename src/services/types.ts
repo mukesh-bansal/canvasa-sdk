@@ -70,6 +70,56 @@ export type InventoryCounts = {
 export type LibraryTopicsResponse = { ok: boolean; lesson_count: number; topics: Topic[] }
 export type ProblemsLibraryResponse = { ok: boolean; total: number; cached_count: number; sections: ProblemSection[] }
 
+// Phase 8 — header-only + paginated section endpoints. Lets the SDK paint
+// the section strip with 5 KB of payload, then fetch each section's first
+// page on expand (also ~5-15 KB). Replaces the 17 MB single-shot fetch the
+// SDK relied on through v0.1.0-alpha.3.
+export type LibraryTopicHeader = {
+  name: string
+  icon: string
+  count: number
+  hs_count: number
+  ug_count: number
+  g_count: number
+  cached_count: number
+}
+export type LibraryTopicHeadersResponse = { ok: boolean; lesson_count: number; topics: LibraryTopicHeader[] }
+export type LibraryTopicSectionResponse = {
+  ok: boolean
+  name: string
+  icon: string
+  total: number
+  offset: number
+  limit: number
+  lessons: Lesson[]
+}
+
+export type ProblemsLibraryHeader = {
+  name: string
+  icon: string
+  count: number
+  hs_count: number
+  ug_count: number
+  g_count: number
+  olympiad_count: number
+  cached_count: number
+}
+export type ProblemsLibraryHeadersResponse = {
+  ok: boolean
+  total: number
+  cached_count: number
+  sections: ProblemsLibraryHeader[]
+}
+export type ProblemsLibrarySectionResponse = {
+  ok: boolean
+  name: string
+  icon: string
+  total: number
+  offset: number
+  limit: number
+  problems: Problem[]
+}
+
 export type GenerateLessonResponse = {
   session_id: string
   hello?: { id: string; text: string; audio_url?: string } | null
