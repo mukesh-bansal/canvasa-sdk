@@ -61,6 +61,10 @@ export interface BrandConfig {
   }
   redirectsTo?: string
   deprecated?: boolean
+  // canvas-a backend versions echoed back by /api/brand for diagnostic
+  // display in the SDK pill. NOT consumed for any behavior — purely UX.
+  olympiz_version?: string
+  canvas_a_version?: string
 }
 
 export interface CanvasaTutorEventMap {
@@ -393,8 +397,13 @@ export class CanvasaTutorElement extends HTMLElement {
       problems: this._counts ? String(this._counts.problems_total) : '',
     }
 
+    // Version pill — shows SDK version + canvas-a backend version (from
+    // /api/version, fetched on mount into this._counts). Lets the user
+    // verify which build is live without digging into the script tag.
+    const backendVer = this._brand?.canvas_a_version || this._brand?.olympiz_version || ''
+    const pillText = backendVer ? `SDK ${CANVASA_SDK_VERSION} · srv ${backendVer}` : `SDK ${CANVASA_SDK_VERSION}`
     this.innerHTML = `
-      <div class="canvasa-tutor__pill" title="Canvas A SDK · ${CANVASA_SDK_VERSION}">v${CANVASA_SDK_VERSION}</div>
+      <div class="canvasa-tutor__pill" title="Canvas A SDK ${CANVASA_SDK_VERSION}${backendVer ? ` · canvas-a backend ${backendVer}` : ''}">${escapeHtml(pillText)}</div>
       <section class="tutor-hero">
         <h1>${heroTitle}</h1>
         <p>${escapeHtml(heroSub)}</p>

@@ -1,6 +1,6 @@
 {
   "name": "@canvasa/sdk",
-  "version": "0.1.0-alpha.7",
+  "version": "0.1.0-alpha.8",
   "description": "Canvas A SDK \u2014 embeddable web components for the AI Tutor. Drop a script tag, get <canvasa-tutor>, <canvasa-chalkboard>, etc. in any host (React, Vue, vanilla, any framework).",
   "main": "./dist/canvasa-sdk.js",
   "scripts": {
