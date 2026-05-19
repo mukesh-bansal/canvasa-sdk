@@ -556,7 +556,7 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  z-index: 50;
+  z-index: 9050;
   padding: 4px 10px;
   border-radius: 999px;
   background: var(--tutor-pill-bg, #0b1428);
