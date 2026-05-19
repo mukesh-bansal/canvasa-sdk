@@ -811,7 +811,7 @@ export class CanvasaTutorElement extends HTMLElement {
       <div class="tutor-card-grid">
         ${lessons.map((l) => {
           const level = l.level || 'HS'
-          return `<button type="button" class="tutor-card" data-canvasa-lesson="${escapeAttr(l.slug)}" data-canvasa-cached="${l.cached ? '1' : '0'}" data-canvasa-title="${escapeAttr(l.title)}" data-canvasa-source="concept">
+          return `<button type="button" class="tutor-card" data-canvasa-lesson="${escapeAttr(l.slug)}" data-canvasa-cached="${l.cached ? '1' : '0'}" data-canvasa-guide-cached="${l.guide_cached ? '1' : '0'}" data-canvasa-title="${escapeAttr(l.title)}" data-canvasa-source="concept">
             <div class="tutor-card__title">${escapeHtml(l.title)}</div>
             <div class="tutor-card__meta">
               <span>${escapeHtml(level)}</span>
@@ -842,6 +842,7 @@ export class CanvasaTutorElement extends HTMLElement {
           slug: card.dataset.canvasaLesson || '',
           title: card.dataset.canvasaTitle || '',
           cached: card.dataset.canvasaCached === '1',
+          guideCached: card.dataset.canvasaGuideCached === '1',
           source: 'concept',
         })
       })
@@ -1010,7 +1011,7 @@ export class CanvasaTutorElement extends HTMLElement {
         ${problems.map((p) => {
           const level = p.level || 'UG'
           const diff = p.difficulty || 'medium'
-          return `<button type="button" class="tutor-prob" data-canvasa-lesson="${escapeAttr(p.slug)}" data-canvasa-cached="${p.cached ? '1' : '0'}" data-canvasa-title="${escapeAttr(p.title)}" data-canvasa-source="problem" data-canvasa-statement="${escapeAttr(p.statement || '')}">
+          return `<button type="button" class="tutor-prob" data-canvasa-lesson="${escapeAttr(p.slug)}" data-canvasa-cached="${p.cached ? '1' : '0'}" data-canvasa-guide-cached="${p.guide_cached ? '1' : '0'}" data-canvasa-title="${escapeAttr(p.title)}" data-canvasa-source="problem" data-canvasa-statement="${escapeAttr(p.statement || '')}">
             <div class="tutor-prob__head">
               <span class="tutor-prob__title">${escapeHtml(p.title)}</span>
               <span class="tutor-pill tutor-pill--${escapeAttr(diff)}">${escapeHtml(diff)}</span>
@@ -1044,6 +1045,7 @@ export class CanvasaTutorElement extends HTMLElement {
           slug: b.dataset.canvasaLesson || '',
           title: b.dataset.canvasaTitle || '',
           cached: b.dataset.canvasaCached === '1',
+          guideCached: b.dataset.canvasaGuideCached === '1',
           source: 'problem',
           statement: b.dataset.canvasaStatement || '',
         })
@@ -1057,7 +1059,7 @@ export class CanvasaTutorElement extends HTMLElement {
 
   // ── Lesson card click → mode picker → launch ────────────────────
 
-  private _handleLessonCardClick(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string }): void {
+  private _handleLessonCardClick(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string; guideCached?: boolean }): void {
     const lessonMode = (this.getAttribute('lesson-mode') as CanvasaLessonMode) || 'picker'
 
     // Fire host-overridable event
@@ -1077,50 +1079,82 @@ export class CanvasaTutorElement extends HTMLElement {
   }
 
   /**
-   * Route the lesson click to /tutor?lesson= or /tutor?ask= based on whether
-   * the backend actually has a prebuilt lesson for this slug:
-   *   - cached=true   → ?lesson=<slug>       (instant load, lesson JSON exists)
-   *   - cached=false  → ?ask=<statement|title>  (canvas-a live-builds the lesson)
+   * Route the lesson click to the right endpoint + mode:
    *
-   * Without this routing, uncached problems 404 on /tutor?lesson=<slug>.
-   * Concepts from cmap_canonical are also uncached by default — same fallback
-   * applies (uses title since they have no statement).
+   *   mode=teach (Walk-Me-Through, /tutor):
+   *     cached=true   → /tutor?lesson=<slug>          (instant load)
+   *     cached=false  → /tutor?ask=<statement|title>  (canvas-a live-builds)
+   *
+   *   mode=guide (Figure-It-Out, /guide):
+   *     guideCached=true  → /guide?lesson=<slug>      (pre-built skeleton)
+   *     guideCached=false → FALLBACK to /tutor?ask=…  (live-build via teach,
+   *                          since /guide does NOT support live-build and
+   *                          would show "Step 1 missing — cache incomplete"
+   *                          with no audio). Surface this fallback via the
+   *                          canvasa-error event so hosts can notify.
+   *
+   * Without these checks: uncached problems 404 on /tutor?lesson=<slug>,
+   * AND /guide?ask=… serves a broken empty shell.
    */
   private _dispatchLaunch(
-    detail: { slug: string; title: string; cached: boolean; source: string; statement?: string; ask?: string },
+    detail: { slug: string; title: string; cached: boolean; source: string; statement?: string; ask?: string; guideCached?: boolean },
     mode: 'teach' | 'guide',
   ): void {
-    if (detail.cached && detail.slug) {
-      this._launch('lesson', { lesson: detail.slug, mode, statement: detail.statement ?? '' })
+    // Guide-Me with no pre-built skeleton can't work — /guide doesn't live-build.
+    if (mode === 'guide' && !detail.guideCached) {
+      this._fireError(
+        'guide-not-cached',
+        'Figure-It-Out (Guide-Me) is not available for this item — server has no pre-built skeleton. Falling back to Walk-Me-Through.',
+        { slug: detail.slug, title: detail.title },
+      )
+      mode = 'teach'
+    }
+
+    if (mode === 'guide' && detail.slug && detail.guideCached) {
+      this._launch('lesson', { lesson: detail.slug, mode: 'guide', statement: detail.statement ?? '' })
       return
     }
-    // Uncached → live build via ?ask=. Prefer the explicit ask, then the
-    // problem statement (richer context for canvas-a), then the title.
+    if (mode === 'teach' && detail.cached && detail.slug) {
+      this._launch('lesson', { lesson: detail.slug, mode: 'teach', statement: detail.statement ?? '' })
+      return
+    }
+    // Teach-Me uncached → live build via ?ask=. Prefer the explicit ask,
+    // then the problem statement (richer context for canvas-a), then title.
     const askText = (detail.ask || detail.statement || detail.title || '').trim()
     if (askText) {
-      this._launch('ask', { ask: askText, mode })
+      this._launch('ask', { ask: askText, mode: 'teach' })
     } else if (detail.slug) {
       // Last-ditch: try lesson route anyway. Server returns 404 if missing.
-      this._launch('lesson', { lesson: detail.slug, mode })
+      this._launch('lesson', { lesson: detail.slug, mode: 'teach' })
     }
   }
 
-  private _openModePicker(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string; ask?: string }): void {
+  private _openModePicker(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string; ask?: string; guideCached?: boolean }): void {
+    // Guide-Me (/guide, Figure-It-Out / Mode 2) only works for items with a
+    // pre-built skeleton on the server. The /guide endpoint does NOT do
+    // live-build, so routing an uncached item there shows "Step 1 missing —
+    // cache is incomplete" and never plays audio. Detect that case and hide
+    // the Guide-Me option so the user can't pick a mode that won't work.
+    const guideAvailable = !!detail.guideCached
     const modal = document.createElement('div')
     modal.className = 'tutor-mode-modal'
+    const subCopy = guideAvailable
+      ? 'Two ways to learn this — pick what suits you.'
+      : 'One mode available for this item — Walk-Me-Through (live-built). The Figure-It-Out mode requires a pre-built skeleton, which this item does not yet have.'
     modal.innerHTML = `
       <div class="tutor-mode-modal__card" role="dialog" aria-label="Pick a learning mode">
         <h3 class="tutor-mode-modal__title">${escapeHtml(detail.title || 'Pick a learning mode')}</h3>
-        <p class="tutor-mode-modal__sub">Two ways to learn this — pick what suits you.</p>
+        <p class="tutor-mode-modal__sub">${escapeHtml(subCopy)}</p>
         <div class="tutor-mode-modal__opts">
           <button type="button" class="tutor-mode-modal__opt" data-mode="teach">
             <div class="tutor-mode-modal__opt__title">Walk me through it (Teach-me)</div>
             <div class="tutor-mode-modal__opt__desc">Linear lesson with synthesized audio + chalkboard visuals.</div>
           </button>
+          ${guideAvailable ? `
           <button type="button" class="tutor-mode-modal__opt" data-mode="guide">
             <div class="tutor-mode-modal__opt__title">Guide me to figure it out</div>
             <div class="tutor-mode-modal__opt__desc">Socratic checkpoints + hints. You drive; the tutor scaffolds.</div>
-          </button>
+          </button>` : ''}
         </div>
         <button type="button" class="tutor-mode-modal__close" data-cancel>Cancel</button>
       </div>
