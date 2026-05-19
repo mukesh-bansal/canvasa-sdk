@@ -6,4 +6,4 @@
 // Bump on every shipped change. Keep in sync with package.json `version`
 // (the build does NOT automate this — manual edit so a mismatch surfaces
 // in code review).
-export const CANVASA_SDK_VERSION = '0.1.0-alpha.1'
+export const CANVASA_SDK_VERSION = '0.1.0-alpha.2'

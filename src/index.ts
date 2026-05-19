@@ -5,10 +5,10 @@
  * custom elements on the page. Each element is independently usable.
  *
  * Available v1:
- *   <canvasa-tutor tenant="<id>">   — AI Tutor landing
+ *   <canvasa-tutor tenant="<id>">                — AI Tutor landing
+ *   <canvasa-chalkboard lesson="<slug>" mode="…"> — embedded lesson runtime
  *
  * Coming in v2:
- *   <canvasa-chalkboard mode="teach|guide" lesson="<slug>">
  *   <canvasa-problem-walker>
  *
  * Coming in v3:
@@ -27,6 +27,8 @@
  * the package is enough to enable the tags.
  */
 import { registerCanvasaTutor } from './elements/canvasa-tutor'
+// canvasa-chalkboard self-registers via module side-effect (see file).
+import './elements/canvasa-chalkboard'
 import { CANVASA_SDK_VERSION } from './version'
 
 // Side-effect: register custom elements on first import / script load.
@@ -49,3 +51,4 @@ if (typeof window !== 'undefined') {
 
 export { CANVASA_SDK_VERSION }
 export type { CanvasaTutorElement, CanvasaTutorEventMap } from './elements/canvasa-tutor'
+export { CanvasaChalkboardElement } from './elements/canvasa-chalkboard'
