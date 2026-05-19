@@ -1,4 +1,4 @@
-const S = "0.1.0-alpha.5";
+const S = "0.1.0-alpha.6";
 let U = "https://canvasa.olympiz.ai", L = "default";
 function j(i) {
   i.host && (U = i.host.replace(/\/$/, "")), i.tenant && (L = i.tenant);
@@ -237,8 +237,8 @@ const q = class q extends HTMLElement {
       fontMono: "--tutor-font-mono"
     };
     for (const [n, o] of Object.entries(t)) {
-      const s = e[n] ?? `--tutor-${n}`;
-      typeof o == "string" && this.style.setProperty(s, o);
+      const a = e[n] ?? `--tutor-${n}`;
+      typeof o == "string" && this.style.setProperty(a, o);
     }
   }
   // ── Render dispatch ─────────────────────────────────────────────
@@ -255,11 +255,11 @@ const q = class q extends HTMLElement {
   }
   _render() {
     var h, d, m, y;
-    const t = ((h = this._brand) == null ? void 0 : h.copy) ?? {}, e = this._slotText("hero-title") ?? t.heroTitle ?? "What do you want to <em>learn</em> today?", r = this._slotText("hero-sub") ?? t.heroSub ?? "Drop a question.", n = (this.getAttribute("hide-tabs") || "").split(",").map((u) => u.trim()).filter(Boolean), o = ["ondemand", "concepts", "problems"].filter((u) => !n.includes(u)), s = {
+    const t = ((h = this._brand) == null ? void 0 : h.copy) ?? {}, e = this._slotText("hero-title") ?? t.heroTitle ?? "What do you want to <em>learn</em> today?", r = this._slotText("hero-sub") ?? t.heroSub ?? "Drop a question.", n = (this.getAttribute("hide-tabs") || "").split(",").map((u) => u.trim()).filter(Boolean), o = ["ondemand", "concepts", "problems"].filter((u) => !n.includes(u)), a = {
       ondemand: ((d = t.tabs) == null ? void 0 : d.ondemand) ?? "On-demand",
       concepts: ((m = t.tabs) == null ? void 0 : m.concepts) ?? "Concept library",
       problems: ((y = t.tabs) == null ? void 0 : y.problems) ?? "Problems"
-    }, a = {
+    }, s = {
       ondemand: "5 ways",
       concepts: this._counts ? String(this._counts.concepts_total) : "",
       problems: this._counts ? String(this._counts.problems_total) : ""
@@ -275,8 +275,8 @@ const q = class q extends HTMLElement {
           <button type="button" role="tab" aria-selected="${u === this._tab}"
                   data-canvasa-tab="${u}"
                   class="tutor-tab${u === this._tab ? " is-active" : ""}">
-            ${b(s[u])}
-            ${a[u] ? `<span class="tutor-tab__count">${b(a[u])}</span>` : ""}
+            ${b(a[u])}
+            ${s[u] ? `<span class="tutor-tab__count">${b(s[u])}</span>` : ""}
           </button>`).join("")}
       </nav>
       <div data-canvasa-tabpanel="${this._tab}" class="canvasa-tutor__panel"></div>
@@ -363,10 +363,10 @@ const q = class q extends HTMLElement {
     }), o.addEventListener("keydown", (d) => {
       d.key === "Enter" && this._handleTopicGo();
     })), (h = t.querySelector("[data-canvasa-launch-topic]")) == null || h.addEventListener("click", () => this._handleTopicGo());
-    const s = t.querySelector("[data-canvasa-source-picker]");
-    s && this._mountSourcePicker(s);
-    const a = t.querySelector("[data-canvasa-pdf-drop]");
-    a && this._mountPdfDrop(a);
+    const a = t.querySelector("[data-canvasa-source-picker]");
+    a && this._mountSourcePicker(a);
+    const s = t.querySelector("[data-canvasa-pdf-drop]");
+    s && this._mountPdfDrop(s);
   }
   _handleTopicGo() {
     const t = this._topic.trim();
@@ -377,19 +377,19 @@ const q = class q extends HTMLElement {
       composed: !0,
       cancelable: !0
     });
-    this.dispatchEvent(r) && (e === "teach" || e === "guide" ? this._launch("ask", { ask: t, mode: e }) : this._openModePicker({ slug: "", title: t, cached: !1, source: "ondemand", ask: t }));
+    this.dispatchEvent(r) && (e === "teach" || e === "guide" ? this._dispatchLaunch({ slug: "", title: t, cached: !1, source: "ondemand", ask: t }, e) : this._openModePicker({ slug: "", title: t, cached: !1, source: "ondemand", ask: t }));
   }
   // Source picker — Internal wiki + External wiki, debounced search
   _mountSourcePicker(t) {
-    let e = "internal", r = "", n = [], o = !1, s = null;
-    const a = [
+    let e = "internal", r = "", n = [], o = !1, a = null;
+    const s = [
       { key: "internal", lbl: "Internal wiki", sub: "SuperStem Physics + AI + HS concept graphs" },
       { key: "external", lbl: "External wiki", sub: "Wikipedia — live" }
     ], c = () => {
       t.innerHTML = `
         <h2>Or, point at a source.</h2>
         <div class="tutor-sources">
-          ${a.map((d) => `
+          ${s.map((d) => `
             <button type="button" class="tutor-source${e === d.key ? " is-active" : ""}" data-canvasa-src="${d.key}">
               <div class="tutor-source__row">
                 <span class="tutor-source__dot"></span>
@@ -421,11 +421,11 @@ const q = class q extends HTMLElement {
       });
       const h = t.querySelector("[data-canvasa-src-q]");
       h == null || h.addEventListener("input", () => {
-        if (r = h.value, s && clearTimeout(s), !r.trim()) {
+        if (r = h.value, a && clearTimeout(a), !r.trim()) {
           n = [], c();
           return;
         }
-        s = window.setTimeout(async () => {
+        a = window.setTimeout(async () => {
           o = !0, c();
           try {
             n = (e === "external" ? await x.wikiSearch(r.trim()) : await x.superstemSearch(r.trim())).results || [];
@@ -462,9 +462,9 @@ const q = class q extends HTMLElement {
     }), r == null || r.addEventListener("dragover", (n) => {
       n.preventDefault(), r.classList.add("is-drag");
     }), r == null || r.addEventListener("dragleave", () => r.classList.remove("is-drag")), r == null || r.addEventListener("drop", (n) => {
-      var s, a;
+      var a, s;
       n.preventDefault(), r.classList.remove("is-drag");
-      const o = (a = (s = n.dataTransfer) == null ? void 0 : s.files) == null ? void 0 : a[0];
+      const o = (s = (a = n.dataTransfer) == null ? void 0 : a.files) == null ? void 0 : s[0];
       o && o.type === "application/pdf" && this._launchPdf(o);
     });
   }
@@ -477,17 +477,17 @@ const q = class q extends HTMLElement {
         <input type="text" class="tutor-input tutor-input--sm" data-canvasa-concept-q
                value="${f(this._conceptQuery)}" placeholder="Search concepts…">
         <div class="tutor-chip-group" data-canvasa-concept-chips>
-          ${["all", "HS", "UG", "G"].map((a) => `
-            <button type="button" class="tutor-chip${this._conceptLevel === a ? " is-active" : ""}" data-canvasa-clvl="${a}">${a === "all" ? "All" : a}</button>`).join("")}
+          ${["all", "HS", "UG", "G"].map((s) => `
+            <button type="button" class="tutor-chip${this._conceptLevel === s ? " is-active" : ""}" data-canvasa-clvl="${s}">${s === "all" ? "All" : s}</button>`).join("")}
         </div>
       </div>
       <div data-canvasa-concept-topics></div>
     </section>`;
     const e = t.querySelector("[data-canvasa-concepts-sub]"), r = t.querySelector("[data-canvasa-concept-topics]");
     if (!e || !r) return;
-    t.querySelectorAll("[data-canvasa-clvl]").forEach((a) => {
-      a.addEventListener("click", () => {
-        this._conceptLevel = a.dataset.canvasaClvl, t.querySelectorAll("[data-canvasa-clvl]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaClvl === this._conceptLevel)), this._topicSectionCache.clear(), this._pageState.clear(), this._rerenderConceptTopics(r);
+    t.querySelectorAll("[data-canvasa-clvl]").forEach((s) => {
+      s.addEventListener("click", () => {
+        this._conceptLevel = s.dataset.canvasaClvl, t.querySelectorAll("[data-canvasa-clvl]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaClvl === this._conceptLevel)), this._topicSectionCache.clear(), this._pageState.clear(), this._rerenderConceptTopics(r);
       });
     });
     let n = null;
@@ -498,14 +498,14 @@ const q = class q extends HTMLElement {
       }, 220);
     }), !this._topicHeaders.length)
       try {
-        const a = await x.libraryTopicHeaders();
-        this._topicHeaders = a.topics || [];
-      } catch (a) {
-        e.textContent = "Failed to load: " + String(a), this._fireError("library-topics-failed", String(a), a);
+        const s = await x.libraryTopicHeaders();
+        this._topicHeaders = s.topics || [];
+      } catch (s) {
+        e.textContent = "Failed to load: " + String(s), this._fireError("library-topics-failed", String(s), s);
         return;
       }
-    const s = this._topicHeaders.reduce((a, c) => a + (c.count || 0), 0);
-    e.textContent = `${s.toLocaleString()} lessons across ${this._topicHeaders.length} topics — click a section to expand.`, this._rerenderConceptTopics(r);
+    const a = this._topicHeaders.reduce((s, c) => s + (c.count || 0), 0);
+    e.textContent = `${a.toLocaleString()} lessons across ${this._topicHeaders.length} topics — click a section to expand.`, this._rerenderConceptTopics(r);
   }
   _conceptLevelCount(t) {
     switch (this._conceptLevel) {
@@ -521,27 +521,27 @@ const q = class q extends HTMLElement {
   }
   _rerenderConceptTopics(t) {
     const e = this._conceptLevel, r = this._conceptQuery.trim(), n = e !== "all" || !!r;
-    t.innerHTML = this._topicHeaders.map((o, s) => {
-      const a = this._conceptLevelCount(o), c = this._expanded.get("c:" + s) ?? s === 0, h = r ? `${o.count} lessons · search active` : `${a} lesson${a === 1 ? "" : "s"}${n ? ` of ${o.count}` : ""}`, d = e !== "all" && a === 0 && !r;
+    t.innerHTML = this._topicHeaders.map((o, a) => {
+      const s = this._conceptLevelCount(o), c = this._expanded.get("c:" + a) ?? a === 0, h = r ? `${o.count} lessons · search active` : `${s} lesson${s === 1 ? "" : "s"}${n ? ` of ${o.count}` : ""}`, d = e !== "all" && s === 0 && !r;
       return `
-        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-ctopic="${s}" data-canvasa-cname="${f(o.name)}" style="${d ? "display:none;" : ""}">
-          <div class="tutor-topic__head" data-canvasa-ctoggle="${s}">
+        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-ctopic="${a}" data-canvasa-cname="${f(o.name)}" style="${d ? "display:none;" : ""}">
+          <div class="tutor-topic__head" data-canvasa-ctoggle="${a}">
             <span class="tutor-topic__icon">${b(o.icon || "📘")}</span>
             <span class="tutor-topic__name">${b(o.name)}</span>
             <span class="tutor-topic__count">${b(h)}</span>
             <span class="tutor-topic__chev">▶</span>
           </div>
-          <div class="tutor-topic__body" data-canvasa-ctopic-body="${s}" data-rendered="0"></div>
+          <div class="tutor-topic__body" data-canvasa-ctopic-body="${a}" data-rendered="0"></div>
         </div>`;
     }).join(""), t.querySelectorAll("[data-canvasa-ctoggle]").forEach((o) => {
       o.addEventListener("click", () => {
-        const s = +(o.dataset.canvasaCtoggle || "0"), a = t.querySelector(`[data-canvasa-ctopic="${s}"]`);
-        if (!a) return;
-        const c = !a.classList.contains("is-expanded");
-        a.classList.toggle("is-expanded", c), this._expanded.set("c:" + s, c), c && this._renderConceptTopicBody(t, s, 0);
+        const a = +(o.dataset.canvasaCtoggle || "0"), s = t.querySelector(`[data-canvasa-ctopic="${a}"]`);
+        if (!s) return;
+        const c = !s.classList.contains("is-expanded");
+        s.classList.toggle("is-expanded", c), this._expanded.set("c:" + a, c), c && this._renderConceptTopicBody(t, a, 0);
       });
-    }), this._topicHeaders.forEach((o, s) => {
-      (this._expanded.get("c:" + s) ?? s === 0) && this._renderConceptTopicBody(t, s, this._pageState.get("c:" + s) ?? 0);
+    }), this._topicHeaders.forEach((o, a) => {
+      (this._expanded.get("c:" + a) ?? a === 0) && this._renderConceptTopicBody(t, a, this._pageState.get("c:" + a) ?? 0);
     });
   }
   async _renderConceptTopicBody(t, e, r) {
@@ -550,15 +550,15 @@ const q = class q extends HTMLElement {
     if (!n) return;
     const o = t.querySelector(`[data-canvasa-ctopic-body="${e}"]`);
     if (!o) return;
-    const s = this._conceptLevel, a = this._conceptQuery.trim(), c = n.name, h = Math.max(0, r * g), d = this._topicSectionCache.get(c), m = d && d.level === s && d.q === a && d.offset === h && d.limit === g;
+    const a = this._conceptLevel, s = this._conceptQuery.trim(), c = n.name, h = Math.max(0, r * g), d = this._topicSectionCache.get(c), m = d && d.level === a && d.q === s && d.offset === h && d.limit === g;
     let y, u;
     if (m && d)
       y = d.lessons, u = d.total;
     else {
       o.innerHTML = '<div class="tutor-empty">Loading…</div>', o.dataset.rendered = "0";
       try {
-        const p = await x.libraryTopicSection(n.name, h, g, s, a);
-        y = p.lessons || [], u = p.total || 0, this._topicSectionCache.set(c, { lessons: y, total: u, offset: h, limit: g, level: s, q: a });
+        const p = await x.libraryTopicSection(n.name, h, g, a, s);
+        y = p.lessons || [], u = p.total || 0, this._topicSectionCache.set(c, { lessons: y, total: u, offset: h, limit: g, level: a, q: s });
       } catch (p) {
         o.innerHTML = `<div class="tutor-empty">Failed to load: ${b(String(p))}</div>`, this._fireError("library-topic-section-failed", String(p), p);
         return;
@@ -609,17 +609,17 @@ const q = class q extends HTMLElement {
         <input type="text" class="tutor-input tutor-input--sm" data-canvasa-prob-q
                value="${f(this._probQuery)}" placeholder="Search problems…">
         <div class="tutor-chip-group" data-canvasa-prob-chips>
-          ${["all", "HS", "UG", "G", "Olympiad", "cached"].map((a) => `
-            <button type="button" class="tutor-chip${this._probChip === a ? " is-active" : ""}" data-canvasa-pchip="${a}">${a === "all" ? "All" : a === "cached" ? "✓" : a}</button>`).join("")}
+          ${["all", "HS", "UG", "G", "Olympiad", "cached"].map((s) => `
+            <button type="button" class="tutor-chip${this._probChip === s ? " is-active" : ""}" data-canvasa-pchip="${s}">${s === "all" ? "All" : s === "cached" ? "✓" : s}</button>`).join("")}
         </div>
       </div>
       <div data-canvasa-problem-sections></div>
     </section>`;
     const e = t.querySelector("[data-canvasa-problems-sub]"), r = t.querySelector("[data-canvasa-problem-sections]");
     if (!e || !r) return;
-    t.querySelectorAll("[data-canvasa-pchip]").forEach((a) => {
-      a.addEventListener("click", () => {
-        this._probChip = a.dataset.canvasaPchip, t.querySelectorAll("[data-canvasa-pchip]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaPchip === this._probChip)), this._problemSectionCache.clear(), this._pageState.clear(), this._rerenderProblemSections(r);
+    t.querySelectorAll("[data-canvasa-pchip]").forEach((s) => {
+      s.addEventListener("click", () => {
+        this._probChip = s.dataset.canvasaPchip, t.querySelectorAll("[data-canvasa-pchip]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaPchip === this._probChip)), this._problemSectionCache.clear(), this._pageState.clear(), this._rerenderProblemSections(r);
       });
     });
     let n = null;
@@ -630,14 +630,14 @@ const q = class q extends HTMLElement {
       }, 220);
     }), !this._problemHeaders.length)
       try {
-        const a = await x.problemsLibraryHeaders();
-        this._problemHeaders = a.sections || [];
-      } catch (a) {
-        e.textContent = "Failed to load: " + String(a), this._fireError("problems-library-failed", String(a), a);
+        const s = await x.problemsLibraryHeaders();
+        this._problemHeaders = s.sections || [];
+      } catch (s) {
+        e.textContent = "Failed to load: " + String(s), this._fireError("problems-library-failed", String(s), s);
         return;
       }
-    const s = this._problemHeaders.reduce((a, c) => a + (c.count || 0), 0);
-    e.textContent = `${s.toLocaleString()} problems across ${this._problemHeaders.length} sections — click a section to expand.`, this._rerenderProblemSections(r);
+    const a = this._problemHeaders.reduce((s, c) => s + (c.count || 0), 0);
+    e.textContent = `${a.toLocaleString()} problems across ${this._problemHeaders.length} sections — click a section to expand.`, this._rerenderProblemSections(r);
   }
   _probChipToLevel() {
     switch (this._probChip) {
@@ -671,27 +671,27 @@ const q = class q extends HTMLElement {
   }
   _rerenderProblemSections(t) {
     const e = this._probChip, r = this._probQuery.trim(), n = e !== "all" || !!r;
-    t.innerHTML = this._problemHeaders.map((o, s) => {
-      const a = this._problemChipCount(o), c = this._expanded.get("p:" + s) ?? s === 0, h = r ? `${o.count} problems · search active` : `${a} problem${a === 1 ? "" : "s"}${n ? ` of ${o.count}` : ""}`, d = e !== "all" && a === 0 && !r;
+    t.innerHTML = this._problemHeaders.map((o, a) => {
+      const s = this._problemChipCount(o), c = this._expanded.get("p:" + a) ?? a === 0, h = r ? `${o.count} problems · search active` : `${s} problem${s === 1 ? "" : "s"}${n ? ` of ${o.count}` : ""}`, d = e !== "all" && s === 0 && !r;
       return `
-        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-psec="${s}" data-canvasa-pname="${f(o.name)}" style="${d ? "display:none;" : ""}">
-          <div class="tutor-topic__head" data-canvasa-ptoggle="${s}">
+        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-psec="${a}" data-canvasa-pname="${f(o.name)}" style="${d ? "display:none;" : ""}">
+          <div class="tutor-topic__head" data-canvasa-ptoggle="${a}">
             <span class="tutor-topic__icon">${b(o.icon || "📘")}</span>
             <span class="tutor-topic__name">${b(o.name)}</span>
             <span class="tutor-topic__count">${b(h)}</span>
             <span class="tutor-topic__chev">▶</span>
           </div>
-          <div class="tutor-topic__body" data-canvasa-psec-body="${s}" data-rendered="0"></div>
+          <div class="tutor-topic__body" data-canvasa-psec-body="${a}" data-rendered="0"></div>
         </div>`;
     }).join(""), t.querySelectorAll("[data-canvasa-ptoggle]").forEach((o) => {
       o.addEventListener("click", () => {
-        const s = +(o.dataset.canvasaPtoggle || "0"), a = t.querySelector(`[data-canvasa-psec="${s}"]`);
-        if (!a) return;
-        const c = !a.classList.contains("is-expanded");
-        a.classList.toggle("is-expanded", c), this._expanded.set("p:" + s, c), c && this._renderProblemSectionBody(t, s, 0);
+        const a = +(o.dataset.canvasaPtoggle || "0"), s = t.querySelector(`[data-canvasa-psec="${a}"]`);
+        if (!s) return;
+        const c = !s.classList.contains("is-expanded");
+        s.classList.toggle("is-expanded", c), this._expanded.set("p:" + a, c), c && this._renderProblemSectionBody(t, a, 0);
       });
-    }), this._problemHeaders.forEach((o, s) => {
-      (this._expanded.get("p:" + s) ?? s === 0) && this._renderProblemSectionBody(t, s, this._pageState.get("p:" + s) ?? 0);
+    }), this._problemHeaders.forEach((o, a) => {
+      (this._expanded.get("p:" + a) ?? a === 0) && this._renderProblemSectionBody(t, a, this._pageState.get("p:" + a) ?? 0);
     });
   }
   async _renderProblemSectionBody(t, e, r) {
@@ -700,15 +700,15 @@ const q = class q extends HTMLElement {
     if (!n) return;
     const o = t.querySelector(`[data-canvasa-psec-body="${e}"]`);
     if (!o) return;
-    const s = this._probChip, a = this._probChipToLevel(), c = this._probQuery.trim(), h = n.name, d = Math.max(0, r * g), m = this._problemSectionCache.get(h), y = m && m.chip === s && m.q === c && m.offset === d && m.limit === g;
+    const a = this._probChip, s = this._probChipToLevel(), c = this._probQuery.trim(), h = n.name, d = Math.max(0, r * g), m = this._problemSectionCache.get(h), y = m && m.chip === a && m.q === c && m.offset === d && m.limit === g;
     let u, v;
     if (y && m)
       u = m.problems, v = m.total;
     else {
       o.innerHTML = '<div class="tutor-empty">Loading…</div>', o.dataset.rendered = "0";
       try {
-        const l = await x.problemsLibrarySection(n.name, d, g, a, c);
-        u = l.problems || [], v = l.total || 0, this._problemSectionCache.set(h, { problems: u, total: v, offset: d, limit: g, chip: s, q: c });
+        const l = await x.problemsLibrarySection(n.name, d, g, s, c);
+        u = l.problems || [], v = l.total || 0, this._problemSectionCache.set(h, { problems: u, total: v, offset: d, limit: g, chip: a, q: c });
       } catch (l) {
         o.innerHTML = `<div class="tutor-empty">Failed to load: ${b(String(l))}</div>`, this._fireError("problems-library-section-failed", String(l), l);
         return;
@@ -764,7 +764,25 @@ const q = class q extends HTMLElement {
       composed: !0,
       cancelable: !0
     });
-    this.dispatchEvent(r) && (e === "teach" || e === "guide" ? this._launch("lesson", { lesson: t.slug, mode: e, statement: t.statement ?? "" }) : this._openModePicker(t));
+    this.dispatchEvent(r) && (e === "teach" || e === "guide" ? this._dispatchLaunch(t, e) : this._openModePicker(t));
+  }
+  /**
+   * Route the lesson click to /tutor?lesson= or /tutor?ask= based on whether
+   * the backend actually has a prebuilt lesson for this slug:
+   *   - cached=true   → ?lesson=<slug>       (instant load, lesson JSON exists)
+   *   - cached=false  → ?ask=<statement|title>  (canvas-a live-builds the lesson)
+   *
+   * Without this routing, uncached problems 404 on /tutor?lesson=<slug>.
+   * Concepts from cmap_canonical are also uncached by default — same fallback
+   * applies (uses title since they have no statement).
+   */
+  _dispatchLaunch(t, e) {
+    if (t.cached && t.slug) {
+      this._launch("lesson", { lesson: t.slug, mode: e, statement: t.statement ?? "" });
+      return;
+    }
+    const r = (t.ask || t.statement || t.title || "").trim();
+    r ? this._launch("ask", { ask: r, mode: e }) : t.slug && this._launch("lesson", { lesson: t.slug, mode: e });
   }
   _openModePicker(t) {
     var o;
@@ -787,16 +805,16 @@ const q = class q extends HTMLElement {
       </div>
     `, document.body.appendChild(e);
     const r = () => e.remove();
-    e.addEventListener("click", (s) => {
-      s.target === e && r();
-    }), (o = e.querySelector("[data-cancel]")) == null || o.addEventListener("click", r), e.querySelectorAll("[data-mode]").forEach((s) => {
-      s.addEventListener("click", () => {
-        const a = s.dataset.mode || "teach";
-        r(), t.slug ? this._launch("lesson", { lesson: t.slug, mode: a, statement: t.statement ?? "" }) : t.ask ? this._launch("ask", { ask: t.ask, mode: a }) : t.statement && this._launch("ask", { ask: t.statement, mode: a });
+    e.addEventListener("click", (a) => {
+      a.target === e && r();
+    }), (o = e.querySelector("[data-cancel]")) == null || o.addEventListener("click", r), e.querySelectorAll("[data-mode]").forEach((a) => {
+      a.addEventListener("click", () => {
+        const s = a.dataset.mode || "teach";
+        r(), this._dispatchLaunch(t, s === "guide" ? "guide" : "teach");
       });
     });
-    const n = (s) => {
-      s.key === "Escape" && (r(), document.removeEventListener("keydown", n));
+    const n = (a) => {
+      a.key === "Escape" && (r(), document.removeEventListener("keydown", n));
     };
     document.addEventListener("keydown", n);
   }
@@ -809,17 +827,17 @@ const q = class q extends HTMLElement {
       cancelable: !0
     });
     if (!this.dispatchEvent(r)) return;
-    const o = (e.mode === "guide" ? "guide" : "tutor") === "guide" ? "/guide" : "/tutor", s = new URLSearchParams();
-    if (e.lesson && s.set("lesson", e.lesson), e.ask && s.set("ask", e.ask), s.set("brand", this._tenant()), typeof window < "u" && window.location) {
-      s.set("return", window.location.href);
-      const a = `${T()}${o}?${s.toString()}`, c = this.getAttribute("lesson-target") || "self";
+    const o = (e.mode === "guide" ? "guide" : "tutor") === "guide" ? "/guide" : "/tutor", a = new URLSearchParams();
+    if (e.lesson && a.set("lesson", e.lesson), e.ask && a.set("ask", e.ask), a.set("brand", this._tenant()), typeof window < "u" && window.location) {
+      a.set("return", window.location.href);
+      const s = `${T()}${o}?${a.toString()}`, c = this.getAttribute("lesson-target") || "self";
       if (c === "blank")
-        window.open(a, "_blank", "noopener");
+        window.open(s, "_blank", "noopener");
       else if (c.startsWith(".") || c.startsWith("#")) {
         const h = document.querySelector(c);
-        h && "src" in h && (h.src = a);
+        h && "src" in h && (h.src = s);
       } else
-        window.location.assign(a);
+        window.location.assign(s);
     }
   }
   _launchUrl(t, e) {
@@ -898,8 +916,8 @@ class J extends HTMLElement {
     return this._buildUrl();
   }
   _buildUrl() {
-    const t = (this.getAttribute("host") || V).replace(/\/$/, ""), r = (this.getAttribute("mode") || "teach").toLowerCase() === "guide" ? "/guide" : "/tutor", n = (this.getAttribute("lesson") || "").trim(), o = (this.getAttribute("tenant") || Q).trim(), s = (this.getAttribute("return-url") || "").trim(), a = new URLSearchParams();
-    return n && a.set("lesson", n), a.set("brand", o), s && a.set("return", s), `${t}${r}?${a.toString()}`;
+    const t = (this.getAttribute("host") || V).replace(/\/$/, ""), r = (this.getAttribute("mode") || "teach").toLowerCase() === "guide" ? "/guide" : "/tutor", n = (this.getAttribute("lesson") || "").trim(), o = (this.getAttribute("tenant") || Q).trim(), a = (this.getAttribute("return-url") || "").trim(), s = new URLSearchParams();
+    return n && s.set("lesson", n), s.set("brand", o), a && s.set("return", a), `${t}${r}?${s.toString()}`;
   }
   _render() {
     const t = (this.getAttribute("lesson") || "").trim();
@@ -992,8 +1010,8 @@ class H extends HTMLElement {
     n.style.cssText = "font-size:20px; font-weight:600; margin-bottom:6px; color:var(--tutor-accent, currentColor);", n.textContent = `Coming in ${t.plannedVersion}`, e.appendChild(n);
     const o = document.createElement("div");
     if (o.style.cssText = "opacity:0.85; max-width:60ch;", o.textContent = t.description, e.appendChild(o), t.docsHref) {
-      const s = document.createElement("a");
-      s.href = t.docsHref, s.target = "_blank", s.rel = "noopener", s.textContent = "Read the contract →", s.style.cssText = "display:inline-block; margin-top:14px; color:var(--tutor-accent, #f6d77a); text-decoration:none; font-size:13px;", e.appendChild(s);
+      const a = document.createElement("a");
+      a.href = t.docsHref, a.target = "_blank", a.rel = "noopener", a.textContent = "Read the contract →", a.style.cssText = "display:inline-block; margin-top:14px; color:var(--tutor-accent, #f6d77a); text-decoration:none; font-size:13px;", e.appendChild(a);
     }
     this.appendChild(e);
   }

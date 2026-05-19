@@ -486,7 +486,7 @@ export class CanvasaTutorElement extends HTMLElement {
     })
     if (!this.dispatchEvent(ev)) return  // host called preventDefault()
     if (lessonMode === 'teach' || lessonMode === 'guide') {
-      this._launch('ask', { ask: t, mode: lessonMode })
+      this._dispatchLaunch({ slug: '', title: t, cached: false, source: 'ondemand', ask: t }, lessonMode)
     } else {
       // Show the teach-me / guide-me picker — same modal as concept-card clicks.
       this._openModePicker({ slug: '', title: t, cached: false, source: 'ondemand', ask: t })
@@ -1012,10 +1012,39 @@ export class CanvasaTutorElement extends HTMLElement {
     if (!proceed) return  // host called preventDefault()
 
     if (lessonMode === 'teach' || lessonMode === 'guide') {
-      this._launch('lesson', { lesson: detail.slug, mode: lessonMode, statement: detail.statement ?? '' })
+      this._dispatchLaunch(detail, lessonMode)
     } else {
       // Show picker modal
       this._openModePicker(detail)
+    }
+  }
+
+  /**
+   * Route the lesson click to /tutor?lesson= or /tutor?ask= based on whether
+   * the backend actually has a prebuilt lesson for this slug:
+   *   - cached=true   → ?lesson=<slug>       (instant load, lesson JSON exists)
+   *   - cached=false  → ?ask=<statement|title>  (canvas-a live-builds the lesson)
+   *
+   * Without this routing, uncached problems 404 on /tutor?lesson=<slug>.
+   * Concepts from cmap_canonical are also uncached by default — same fallback
+   * applies (uses title since they have no statement).
+   */
+  private _dispatchLaunch(
+    detail: { slug: string; title: string; cached: boolean; source: string; statement?: string; ask?: string },
+    mode: 'teach' | 'guide',
+  ): void {
+    if (detail.cached && detail.slug) {
+      this._launch('lesson', { lesson: detail.slug, mode, statement: detail.statement ?? '' })
+      return
+    }
+    // Uncached → live build via ?ask=. Prefer the explicit ask, then the
+    // problem statement (richer context for canvas-a), then the title.
+    const askText = (detail.ask || detail.statement || detail.title || '').trim()
+    if (askText) {
+      this._launch('ask', { ask: askText, mode })
+    } else if (detail.slug) {
+      // Last-ditch: try lesson route anyway. Server returns 404 if missing.
+      this._launch('lesson', { lesson: detail.slug, mode })
     }
   }
 
@@ -1047,9 +1076,7 @@ export class CanvasaTutorElement extends HTMLElement {
       b.addEventListener('click', () => {
         const mode = (b.dataset.mode as CanvasaLessonMode) || 'teach'
         close()
-        if (detail.slug) this._launch('lesson', { lesson: detail.slug, mode, statement: detail.statement ?? '' })
-        else if (detail.ask) this._launch('ask', { ask: detail.ask, mode })
-        else if (detail.statement) this._launch('ask', { ask: detail.statement, mode })
+        this._dispatchLaunch(detail, mode === 'guide' ? 'guide' : 'teach')
       })
     })
     // ESC to close
