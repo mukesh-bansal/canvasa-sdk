@@ -1,114 +1,59 @@
 /**
  * <canvasa-tutor> — Canvas A AI Tutor landing as a custom element.
  *
- * v1 SCOPE (this Phase 1 scaffold)
- *   - Shell only: registers the element, parses attributes, fires
- *     `canvasa-ready`, exposes the programmatic API. Renders a minimal
- *     "Canvas A SDK · vN.N.N" placeholder. Phase 2 ports the full landing
- *     UI from canvasa-tutor-react v0.1.7 into this element.
+ * Phase 2 (this file): full landing UI ported from canvasa-tutor-react
+ * v0.1.7 — hero + 3 tabs + Concept library + Problems + lazy-render per
+ * section + pagination + KaTeX on visible page + mode picker modal
+ * (teach-me / guide-me).
  *
- * RENDERING MODEL
- *   - Light DOM (no shadow root) so host CSS reaches the element naturally.
- *     All internal classes are prefixed `canvasa-` (BEM-style) to avoid
- *     collisions with host styles.
- *   - CSS custom properties drive theming. Hosts set them on the element
- *     (or any ancestor) and the SDK inherits.
+ * Architecture notes:
+ *   - Light DOM rendering (no shadow root) so host CSS reaches the tree
+ *     naturally. All internal classes namespaced `tutor-` (from upstream
+ *     canvasa-tutor-react CSS) to avoid host collisions.
+ *   - CSS injected via a <style> tag inside the element, scoped by an
+ *     attribute selector so multiple <canvasa-tutor> instances don't
+ *     duplicate styles. Sub-DOM still inherits CSS variables from host.
+ *   - Lazy-render: section headers render on mount; rows render on
+ *     expand. KaTeX runs only on the visible page's rows. Re-rendering
+ *     swaps in place to keep DOM at ~30 visible rows max.
  *
- * ATTRIBUTES
- *   tenant            string  — which brand config to load (default: "default")
- *   mode              "landing" | "embed" | "compact"   (default: "landing")
- *   default-tab       "ondemand" | "concepts" | "problems"   (default: "ondemand")
- *   hide-tabs         comma-list (e.g. "concepts,problems")
- *   lesson            slug      — pre-launch a lesson on mount (skips landing)
- *   ask               topic     — pre-launch a live build (skips landing)
- *   problem-id        po_id     — open a specific problem
- *   lesson-target     "self" | "blank" | css-selector
- *   lesson-mode       "teach" | "guide" | "picker"   (default: "picker")
- *   katex-cdn         URL or "off"
- *   debug             "1" to enable console logging
- *
- * CSS CUSTOM PROPERTIES (set on the element or any ancestor)
- *   --tutor-accent --tutor-accent-hover --tutor-bg --tutor-surface
- *   --tutor-text --tutor-muted --tutor-line --tutor-radius
- *   --tutor-font-head --tutor-font-body --tutor-font-mono
- *   --tutor-mark-url --tutor-spacing-unit
- *
- * SLOTS
- *   hero-title    Override the hero h1
- *   hero-sub      Override the hero sub-line
- *   cta-label     Override the primary CTA label
- *   empty-state   Override the "no matches" copy
- *   footer        Append host-specific footer chrome
- *
- * EVENTS (CustomEvents, bubble + composed)
- *   canvasa-ready          { version, tenant }                      fires on mount + after brand-config load
- *   canvasa-tab-change     { tab }                                  fires when user switches tabs
- *   canvasa-lesson-click   { slug, title, cached, mode, source }    fires when user clicks a lesson card
- *   canvasa-launch         { kind: "ask" | "lesson", payload }      fires before navigation to /tutor or /guide
- *   canvasa-error          { code, message, cause }                 on fetch / config errors
- *
- * PROGRAMMATIC API (methods on the element)
- *   setTenant(tenant: string): void
- *   setTab(tab: "ondemand" | "concepts" | "problems"): void
- *   launchAsk(topic: string, opts?: { mode?: "teach" | "guide" }): void
- *   launchLesson(slug: string, opts?: { mode?: "teach" | "guide" }): void
- *   getBrandConfig(): BrandConfig | null
- *   refresh(): Promise<void>
+ * See README.md for the public contract (attributes, events, slots,
+ * CSS variables, programmatic API).
  */
 
 import { CANVASA_SDK_VERSION } from '../version'
-
-// Default backend host. Override per-element via `data-canvasa-host` attribute
-// or globally via window.CANVASA_HOST before SDK loads.
-function getCanvasaHost(): string {
-  if (typeof window !== 'undefined' && (window as any).CANVASA_HOST) {
-    return (window as any).CANVASA_HOST as string
-  }
-  return 'https://canvasa.olympiz.ai'
-}
+import { canvasaApi, setApiConfig } from '../services/api'
+import type {
+  Topic, Problem, ProblemSection, InventoryCounts,
+  LibraryTopicsResponse, ProblemsLibraryResponse,
+  WikiSearchResult,
+} from '../services/types'
+import tutorCss from '../styles/tutor.css?inline'
 
 // ───────────────────────────────────────────────────────────────────
-// Types
+// Types & constants
 // ───────────────────────────────────────────────────────────────────
 
 export type CanvasaTutorTab = 'ondemand' | 'concepts' | 'problems'
 export type CanvasaLessonMode = 'teach' | 'guide' | 'picker'
+export type SourceKind = 'internal' | 'external'
+export type ConceptLevel = 'all' | 'HS' | 'UG' | 'G'
+export type ProbChip = 'all' | 'HS' | 'UG' | 'G' | 'Olympiad' | 'cached'
 
-export interface BrandTokens {
-  accent?: string
-  accentHover?: string
-  bg?: string
-  surface?: string
-  text?: string
-  muted?: string
-  line?: string
-  radius?: string
-  fontHead?: string
-  fontBody?: string
-  fontMono?: string
-  spacingUnit?: string
-}
-
-export interface BrandCopy {
-  heroTitle?: string
-  heroSub?: string
-  ctaLabel?: string
-  emptyState?: string
-  tabs?: Partial<Record<CanvasaTutorTab, string>>
-  placeholderTopic?: string
-}
-
-export interface BrandMark {
-  url?: string
-  svg?: string
-  alt?: string
-}
+const PAGE_SIZE = 30
 
 export interface BrandConfig {
   tenant: string
-  tokens?: BrandTokens
-  copy?: BrandCopy
-  mark?: BrandMark
+  tokens?: Record<string, string>
+  copy?: {
+    heroTitle?: string
+    heroSub?: string
+    ctaLabel?: string
+    emptyState?: string
+    placeholderTopic?: string
+    tabs?: Partial<Record<CanvasaTutorTab, string>>
+  }
+  mark?: { url?: string; svg?: string; alt?: string }
   view?: {
     tabs?: CanvasaTutorTab[]
     defaultTab?: CanvasaTutorTab
@@ -126,8 +71,111 @@ export interface CanvasaTutorEventMap {
   'canvasa-error':         CustomEvent<{ code: string; message: string; cause?: unknown }>
 }
 
+function getCanvasaHost(): string {
+  if (typeof window !== 'undefined' && (window as any).CANVASA_HOST) return (window as any).CANVASA_HOST as string
+  return 'https://canvasa.olympiz.ai'
+}
+
+let _stylesInjected = false
+function ensureGlobalStyles(): void {
+  if (_stylesInjected) return
+  if (typeof document === 'undefined') return
+  const id = 'canvasa-sdk-styles'
+  if (document.getElementById(id)) { _stylesInjected = true; return }
+  const style = document.createElement('style')
+  style.id = id
+  style.textContent = tutorCss
+  document.head.appendChild(style)
+  _stylesInjected = true
+}
+
+function escapeHtml(s: string | null | undefined): string {
+  if (s == null) return ''
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c] as string))
+}
+
+function escapeAttr(s: string | null | undefined): string {
+  return escapeHtml(s).replace(/`/g, '&#96;')
+}
+
+// KaTeX — single global instance, lazy-loaded from CDN or window-global.
+type RenderMathInElement = (el: HTMLElement, opts: unknown) => void
+let _katex: RenderMathInElement | null = null
+let _katexLoading: Promise<RenderMathInElement | null> | null = null
+
+async function ensureKatex(cdnAttr: string | null): Promise<RenderMathInElement | null> {
+  if (cdnAttr === 'off') return null
+  if (_katex) return _katex
+  if (typeof window === 'undefined') return null
+  // 1) window.renderMathInElement from a host <script> tag (preferred)
+  if (typeof (window as any).renderMathInElement === 'function') {
+    _katex = (window as any).renderMathInElement as RenderMathInElement
+    return _katex
+  }
+  if (_katexLoading) return _katexLoading
+  const cdnBase = cdnAttr || 'https://cdn.jsdelivr.net/npm/katex@0.16.10/dist'
+  _katexLoading = (async () => {
+    try {
+      // Load CSS once
+      if (!document.querySelector(`link[href^="${cdnBase}/katex.min.css"]`)) {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = `${cdnBase}/katex.min.css`
+        link.crossOrigin = 'anonymous'
+        document.head.appendChild(link)
+      }
+      // Load core + auto-render
+      await loadScript(`${cdnBase}/katex.min.js`)
+      await loadScript(`${cdnBase}/contrib/auto-render.min.js`)
+      // Poll briefly for the global to land
+      for (let i = 0; i < 30; i++) {
+        if (typeof (window as any).renderMathInElement === 'function') {
+          _katex = (window as any).renderMathInElement as RenderMathInElement
+          return _katex
+        }
+        await new Promise((r) => setTimeout(r, 100))
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('[canvasa-sdk] KaTeX load failed; raw $...$ will show', e)
+    }
+    return null
+  })()
+  return _katexLoading
+}
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve()
+    const s = document.createElement('script')
+    s.src = src; s.async = true; s.crossOrigin = 'anonymous'
+    s.onload = () => resolve(); s.onerror = (e) => reject(e)
+    document.head.appendChild(s)
+  })
+}
+
+function renderMathInChildren(root: HTMLElement, render: RenderMathInElement | null): void {
+  if (!render) return
+  try {
+    render(root, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true },
+      ],
+      throwOnError: false,
+      // 'button' intentionally NOT in ignoredTags — problem statements
+      // live inside clickable <button>s and the math must render there.
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+    })
+  } catch { /* noop */ }
+}
+
 // ───────────────────────────────────────────────────────────────────
-// CanvasaTutorElement
+// Element
 // ───────────────────────────────────────────────────────────────────
 
 export class CanvasaTutorElement extends HTMLElement {
@@ -138,199 +186,773 @@ export class CanvasaTutorElement extends HTMLElement {
 
   private _brand: BrandConfig | null = null
   private _ready = false
+  private _tab: CanvasaTutorTab = 'ondemand'
+  private _topic = ''
+  private _conceptQuery = ''
+  private _conceptLevel: ConceptLevel = 'all'
+  private _probQuery = ''
+  private _probChip: ProbChip = 'all'
+  private _topicsData: Topic[] = []
+  private _problemsData: ProblemSection[] = []
+  private _counts: InventoryCounts | null = null
+  private _busy = false
+  private _busyMsg = ''
+  private _errorMsg = ''
+  private _abort?: AbortController
+  private _expanded: Map<string, boolean> = new Map()
+  private _pageState: Map<string, number> = new Map()
 
   // ── Lifecycle ───────────────────────────────────────────────────
 
   connectedCallback(): void {
-    // Mark element with a stable class so host CSS can target it.
-    this.classList.add('canvasa-tutor')
-    this._renderShell()
-    void this._loadBrandConfig().then(() => {
-      this._applyBrandTokens()
-      this._renderShell()  // re-render with brand-loaded state
-      this._markReady()
-    })
+    ensureGlobalStyles()
+    this.classList.add('canvasa-tutor', 'tutor-root', 'tutor-page')
+    setApiConfig({ host: getCanvasaHost(), tenant: this._tenant() })
+
+    // Honor default-tab + deep-link attributes
+    const defaultTab = (this.getAttribute('default-tab') as CanvasaTutorTab) || 'ondemand'
+    this._tab = defaultTab
+
+    // Deep-link: if `lesson` or `ask` is on the element, launch immediately
+    const lessonSlug = this.getAttribute('lesson')
+    const ask = this.getAttribute('ask')
+    if (lessonSlug) {
+      const mode = (this.getAttribute('lesson-mode') as CanvasaLessonMode) || 'teach'
+      this._launch('lesson', { lesson: lessonSlug, mode })
+    } else if (ask) {
+      const mode = (this.getAttribute('lesson-mode') as CanvasaLessonMode) || 'teach'
+      this._launch('ask', { ask, mode })
+    }
+
+    this._render()
+    void this._bootstrap()
   }
 
   disconnectedCallback(): void {
-    // Intentionally minimal — Phase 2 will wire up cleanup of observers,
-    // fetch abort controllers, KaTeX teardown, etc.
+    this._abort?.abort()
   }
 
-  attributeChangedCallback(name: string, _old: string | null, _next: string | null): void {
-    if (!this.isConnected) return
+  attributeChangedCallback(name: string, oldVal: string | null, newVal: string | null): void {
+    if (!this.isConnected || oldVal === newVal) return
     if (name === 'tenant') {
-      void this._loadBrandConfig().then(() => {
-        this._applyBrandTokens()
-        this._renderShell()
-      })
+      setApiConfig({ tenant: this._tenant() })
+      void this._bootstrap()
+    } else if (name === 'default-tab' && newVal) {
+      this._tab = newVal as CanvasaTutorTab
+      this._render()
     } else {
-      this._renderShell()
+      this._render()
     }
   }
 
   // ── Programmatic API ────────────────────────────────────────────
 
-  setTenant(tenant: string): void {
-    this.setAttribute('tenant', tenant)
-  }
-
-  setTab(tab: CanvasaTutorTab): void {
-    this.setAttribute('default-tab', tab)
-    this.dispatchEvent(new CustomEvent('canvasa-tab-change', { detail: { tab }, bubbles: true, composed: true }))
-  }
-
+  setTenant(tenant: string): void { this.setAttribute('tenant', tenant) }
+  setTab(tab: CanvasaTutorTab): void { this._tab = tab; this._render(); this._fireTab() }
   launchAsk(topic: string, opts?: { mode?: CanvasaLessonMode }): void {
     this._launch('ask', { ask: topic, mode: opts?.mode ?? 'teach' })
   }
-
   launchLesson(slug: string, opts?: { mode?: CanvasaLessonMode }): void {
     this._launch('lesson', { lesson: slug, mode: opts?.mode ?? 'teach' })
   }
+  getBrandConfig(): BrandConfig | null { return this._brand }
+  async refresh(): Promise<void> { await this._bootstrap() }
 
-  getBrandConfig(): BrandConfig | null {
-    return this._brand
-  }
+  // ── Bootstrap (brand + counts) ──────────────────────────────────
 
-  async refresh(): Promise<void> {
-    await this._loadBrandConfig()
+  private async _bootstrap(): Promise<void> {
+    await Promise.all([this._loadBrand(), this._loadCounts()])
     this._applyBrandTokens()
-    this._renderShell()
+    this._render()
+    this._markReady()
   }
 
-  // ── Internal ────────────────────────────────────────────────────
-
-  private _tenant(): string {
-    return this.getAttribute('tenant') || 'default'
-  }
-
-  private _debug(): boolean {
-    return this.getAttribute('debug') === '1'
-  }
-
-  private async _loadBrandConfig(): Promise<void> {
+  private async _loadBrand(): Promise<void> {
     const tenant = this._tenant()
-    const url = `${getCanvasaHost()}/api/brand/${encodeURIComponent(tenant)}`
     try {
-      const r = await fetch(url, { credentials: 'omit' })
-      if (!r.ok) throw new Error(`HTTP ${r.status}`)
-      this._brand = (await r.json()) as BrandConfig
-      if (this._debug()) console.log('[canvasa] brand loaded', this._brand)
+      this._brand = await canvasaApi.brand<BrandConfig>(tenant)
     } catch (cause) {
-      // Brand-config endpoint may not exist yet (Phase 3 builds it). Fall
-      // back to a built-in default so the element renders something.
       this._brand = { tenant, tokens: {}, copy: {}, mark: {} }
-      this.dispatchEvent(new CustomEvent('canvasa-error', {
-        detail: { code: 'brand-config-fetch-failed', message: String(cause), cause },
-        bubbles: true, composed: true,
-      }))
+      this._fireError('brand-config-fetch-failed', String(cause), cause)
     }
   }
 
-  private _applyBrandTokens(): void {
-    if (!this._brand?.tokens) return
-    const t = this._brand.tokens
-    const set = (k: string, v: string | undefined) => { if (v) this.style.setProperty(k, v) }
-    set('--tutor-accent', t.accent)
-    set('--tutor-accent-hover', t.accentHover)
-    set('--tutor-bg', t.bg)
-    set('--tutor-surface', t.surface)
-    set('--tutor-text', t.text)
-    set('--tutor-muted', t.muted)
-    set('--tutor-line', t.line)
-    set('--tutor-radius', t.radius)
-    set('--tutor-font-head', t.fontHead)
-    set('--tutor-font-body', t.fontBody)
-    set('--tutor-font-mono', t.fontMono)
-    set('--tutor-spacing-unit', t.spacingUnit)
+  private async _loadCounts(): Promise<void> {
+    try { this._counts = await canvasaApi.inventoryCounts() }
+    catch (cause) { this._fireError('inventory-counts-failed', String(cause), cause) }
   }
 
-  private _renderShell(): void {
-    const tenant = this._tenant()
-    const copy = this._brand?.copy ?? {}
-    const heroTitle = this.querySelector('[slot="hero-title"]')?.textContent
-      ?? copy.heroTitle ?? 'What do you want to learn today?'
-    const heroSub = this.querySelector('[slot="hero-sub"]')?.textContent
-      ?? copy.heroSub ?? 'Drop a question.'
+  private _applyBrandTokens(): void {
+    const t = this._brand?.tokens
+    if (!t) return
+    const map: Record<string, string> = {
+      accent: '--tutor-accent',
+      accentHover: '--tutor-accent-strong',
+      bg: '--tutor-bg',
+      surface: '--tutor-surface',
+      text: '--tutor-text',
+      muted: '--tutor-muted',
+      line: '--tutor-border',
+      radius: '--tutor-radius',
+      fontHead: '--tutor-font-display',
+      fontBody: '--tutor-font-body',
+      fontMono: '--tutor-font-mono',
+    }
+    for (const [k, v] of Object.entries(t)) {
+      const cssVar = map[k] ?? `--tutor-${k}`
+      if (typeof v === 'string') this.style.setProperty(cssVar, v)
+    }
+  }
 
-    // Phase 1 placeholder. Phase 2 swaps this for the full landing UI.
-    // The placeholder still renders the version pill + theme tokens so
-    // hosts can validate their CSS variables resolve correctly.
+  // ── Render dispatch ─────────────────────────────────────────────
+
+  private _tenant(): string { return this.getAttribute('tenant') || 'default' }
+  private _debug(): boolean { return this.getAttribute('debug') === '1' }
+
+  private _slotText(slotName: string): string | null {
+    const el = this.querySelector(`[slot="${CSS.escape(slotName)}"]`)
+    return el?.textContent?.trim() || null
+  }
+
+  private _render(): void {
+    const copy = this._brand?.copy ?? {}
+    const heroTitle = this._slotText('hero-title') ?? copy.heroTitle ?? 'What do you want to <em>learn</em> today?'
+    const heroSub = this._slotText('hero-sub') ?? copy.heroSub ?? 'Drop a question.'
+    const hideTabs = (this.getAttribute('hide-tabs') || '').split(',').map((s) => s.trim()).filter(Boolean)
+    const tabs: CanvasaTutorTab[] = (['ondemand', 'concepts', 'problems'] as CanvasaTutorTab[])
+      .filter((t) => !hideTabs.includes(t))
+    const tabLabels: Record<CanvasaTutorTab, string> = {
+      ondemand: copy.tabs?.ondemand ?? 'On-demand',
+      concepts: copy.tabs?.concepts ?? 'Concept library',
+      problems: copy.tabs?.problems ?? 'Problems',
+    }
+    const tabCounts: Record<CanvasaTutorTab, string> = {
+      ondemand: '5 ways',
+      concepts: this._counts ? String(this._counts.concepts_total) : '',
+      problems: this._counts ? String(this._counts.problems_total) : '',
+    }
+
     this.innerHTML = `
-      <style>
-        .canvasa-tutor {
-          display: block;
-          font-family: var(--tutor-font-body, 'Inter', system-ui, sans-serif);
-          color: var(--tutor-text, #1a3a52);
-          padding: 24px;
-        }
-        .canvasa-tutor__hero {
-          text-align: center;
-          padding: 32px 0;
-        }
-        .canvasa-tutor__hero h1 {
-          font-family: var(--tutor-font-head, 'Playfair Display', Georgia, serif);
-          font-size: clamp(28px, 5vw, 48px);
-          margin: 0 0 12px;
-          color: var(--tutor-text, #1a3a52);
-        }
-        .canvasa-tutor__hero p {
-          color: var(--tutor-muted, #5a7c92);
-          margin: 0;
-        }
-        .canvasa-tutor__pill {
-          position: fixed; top: 12px; right: 60px; z-index: 99999;
-          font-family: 'JetBrains Mono', ui-monospace, monospace;
-          font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-          padding: 5px 11px; border-radius: 999px;
-          background: #14213D; color: #e8c970; border: 1px solid #C9A227;
-          box-shadow: 0 2px 8px rgba(20,33,61,0.30);
-          pointer-events: auto; user-select: none;
-        }
-        .canvasa-tutor__placeholder {
-          max-width: 720px; margin: 24px auto 0; padding: 24px;
-          background: var(--tutor-surface, rgba(255,255,255,0.7));
-          border: 1px dashed var(--tutor-line, rgba(26,58,82,0.18));
-          border-radius: var(--tutor-radius, 8px);
-          font-size: 13px; color: var(--tutor-muted, #5a7c92); line-height: 1.6;
-        }
-        .canvasa-tutor__placeholder code {
-          background: rgba(0,0,0,0.06); padding: 1px 6px; border-radius: 3px;
-        }
-      </style>
-      <div class="canvasa-tutor__pill" title="Canvas A SDK version. Hard-refresh if outdated.">v${CANVASA_SDK_VERSION}</div>
-      <section class="canvasa-tutor__hero">
-        <h1>${escapeHtml(heroTitle)}</h1>
+      <div class="canvasa-tutor__pill" title="Canvas A SDK · ${CANVASA_SDK_VERSION}">v${CANVASA_SDK_VERSION}</div>
+      <section class="tutor-hero">
+        <h1>${heroTitle}</h1>
         <p>${escapeHtml(heroSub)}</p>
       </section>
-      <div class="canvasa-tutor__placeholder">
-        <strong>Canvas A SDK · Phase 1 scaffold.</strong><br>
-        Tenant: <code>${escapeHtml(tenant)}</code> ·
-        Brand config: ${this._brand ? '<code>loaded</code>' : '<code>pending</code>'} ·
-        Version: <code>v${CANVASA_SDK_VERSION}</code><br>
-        Phase 2 ports the full landing UI (3 tabs · Concept library · Problems · KaTeX · pagination) here.
+      <nav class="tutor-tabs" role="tablist">
+        ${tabs.map((t) => `
+          <button type="button" role="tab" aria-selected="${t === this._tab}"
+                  data-canvasa-tab="${t}"
+                  class="tutor-tab${t === this._tab ? ' is-active' : ''}">
+            ${escapeHtml(tabLabels[t])}
+            ${tabCounts[t] ? `<span class="tutor-tab__count">${escapeHtml(tabCounts[t])}</span>` : ''}
+          </button>`).join('')}
+      </nav>
+      <div data-canvasa-tabpanel="${this._tab}" class="canvasa-tutor__panel"></div>
+      <div class="canvasa-tutor__footer">
+        <slot name="footer"></slot>
       </div>
     `
+
+    // Wire tab buttons
+    this.querySelectorAll<HTMLButtonElement>('[data-canvasa-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const t = btn.dataset.canvasaTab as CanvasaTutorTab
+        this.setTab(t)
+      })
+    })
+
+    // Inject version pill style if not already
+    this._injectPillStyle()
+
+    // Render active tab
+    const panel = this.querySelector<HTMLElement>('.canvasa-tutor__panel')
+    if (!panel) return
+    if (this._tab === 'ondemand') this._renderOnDemand(panel)
+    else if (this._tab === 'concepts') void this._renderConcepts(panel)
+    else if (this._tab === 'problems') void this._renderProblems(panel)
   }
 
-  private _markReady(): void {
-    if (this._ready) return
-    this._ready = true
-    this.dispatchEvent(new CustomEvent('canvasa-ready', {
-      detail: { version: CANVASA_SDK_VERSION, tenant: this._tenant() },
-      bubbles: true, composed: true,
-    }))
+  private _injectPillStyle(): void {
+    const id = 'canvasa-tutor-pill-style'
+    if (document.getElementById(id)) return
+    const style = document.createElement('style')
+    style.id = id
+    style.textContent = `
+      .canvasa-tutor__pill {
+        position: fixed; top: 12px; right: 60px; z-index: 99999;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+        padding: 5px 11px; border-radius: 999px;
+        background: #14213D; color: #e8c970; border: 1px solid #C9A227;
+        box-shadow: 0 2px 8px rgba(20,33,61,0.30);
+        pointer-events: auto; user-select: none;
+      }
+      .canvasa-tutor__panel { margin-top: 24px; }
+      .canvasa-tutor__footer { margin-top: 32px; }
+      .tutor-pag { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 10px 0 4px; font-family: var(--tutor-font-mono, 'JetBrains Mono', monospace); font-size: 11px; color: var(--tutor-muted, #5a7c92); }
+      .tutor-pag button { background: transparent; border: 1px solid var(--tutor-border, rgba(26,58,82,0.18)); border-radius: 5px; padding: 4px 10px; cursor: pointer; color: var(--tutor-muted, #5a7c92); font: inherit; }
+      .tutor-pag button:disabled { opacity: 0.35; cursor: default; }
+      .tutor-empty { padding: 18px 4px; color: var(--tutor-muted, #79a0bb); font-size: 12.5px; }
+      .tutor-section__sub { color: var(--tutor-muted, #5a7c92); font-size: 12.5px; margin-bottom: 8px; }
+      .tutor-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+      .tutor-input { flex: 1; padding: 12px 14px; border: 1px solid var(--tutor-border, #e7ecf3); border-radius: var(--tutor-radius-sm, 8px); font: inherit; background: var(--tutor-surface, #fff); color: var(--tutor-text); }
+      .tutor-input--sm { padding: 10px 12px; font-size: 13px; }
+      .tutor-btn { padding: 12px 18px; background: var(--tutor-primary, #14213d); color: var(--tutor-on-primary, #fff); border: none; border-radius: var(--tutor-radius-sm, 8px); cursor: pointer; font: inherit; font-weight: 600; }
+      .tutor-btn:hover { background: var(--tutor-primary-hover, #0a162b); }
+      .tutor-btn:disabled { opacity: 0.5; cursor: default; }
+      .tutor-status { padding: 8px 12px; font-size: 12.5px; color: var(--tutor-muted, #5a7c92); margin-top: 8px; }
+      .tutor-status--error { color: var(--tutor-danger, #b91c1c); }
+      .tutor-mode-modal { position: fixed; inset: 0; background: rgba(20,33,61,0.55); z-index: 99998; display: flex; align-items: center; justify-content: center; }
+      .tutor-mode-modal__card { background: var(--tutor-surface, #fff); padding: 28px 28px 22px; max-width: 440px; width: 92vw; border-radius: var(--tutor-radius, 12px); box-shadow: var(--tutor-shadow, 0 14px 40px rgba(0,0,0,0.18)); }
+      .tutor-mode-modal__title { font-family: var(--tutor-font-display, serif); font-size: 22px; margin: 0 0 6px; color: var(--tutor-text, #1a1a2e); }
+      .tutor-mode-modal__sub { color: var(--tutor-muted, #4a4a5a); margin: 0 0 18px; font-size: 13.5px; }
+      .tutor-mode-modal__opts { display: flex; flex-direction: column; gap: 10px; }
+      .tutor-mode-modal__opt { text-align: left; padding: 12px 14px; border: 1px solid var(--tutor-border, #e7ecf3); border-radius: var(--tutor-radius-sm, 8px); background: transparent; cursor: pointer; font: inherit; }
+      .tutor-mode-modal__opt:hover { background: var(--tutor-accent-soft, rgba(201,162,39,0.10)); border-color: var(--tutor-accent, #c9a227); }
+      .tutor-mode-modal__opt__title { font-weight: 600; color: var(--tutor-text, #1a1a2e); margin-bottom: 2px; }
+      .tutor-mode-modal__opt__desc { color: var(--tutor-muted, #4a4a5a); font-size: 12.5px; }
+      .tutor-mode-modal__close { margin-top: 14px; background: transparent; border: none; color: var(--tutor-faint, #8b8b9b); font: inherit; font-size: 12.5px; cursor: pointer; padding: 6px 0 0; }
+    `
+    document.head.appendChild(style)
   }
+
+  // ── On-demand tab ───────────────────────────────────────────────
+
+  private _renderOnDemand(panel: HTMLElement): void {
+    const copy = this._brand?.copy ?? {}
+    const placeholder = copy.placeholderTopic ?? "e.g. Bernoulli's principle · Lenz's law · Maxwell's equations"
+    const ctaLabel = (this._slotText('cta-label') ?? copy.ctaLabel ?? 'AI Tutor →')
+
+    panel.innerHTML = `
+      <section class="tutor-section">
+        <h2>Type a topic.</h2>
+        <div class="tutor-row">
+          <input type="text" class="tutor-input" data-canvasa-topic
+                 placeholder="${escapeAttr(placeholder)}" value="${escapeAttr(this._topic)}">
+          <button type="button" class="tutor-btn" data-canvasa-launch-topic ${this._busy || !this._topic.trim() ? 'disabled' : ''}>
+            ${this._busy ? 'Working…' : escapeHtml(ctaLabel)}
+          </button>
+        </div>
+        ${this._busyMsg || this._errorMsg ? `<div class="tutor-status${this._errorMsg ? ' tutor-status--error' : ''}">${escapeHtml(this._errorMsg || this._busyMsg)}</div>` : ''}
+      </section>
+      <section class="tutor-section" data-canvasa-source-picker></section>
+      <section class="tutor-section">
+        <h2>Or, drop a chapter or paper.</h2>
+        <div data-canvasa-pdf-drop></div>
+      </section>
+    `
+
+    const topicInput = panel.querySelector<HTMLInputElement>('[data-canvasa-topic]')
+    if (topicInput) {
+      topicInput.addEventListener('input', () => {
+        this._topic = topicInput.value
+        const btn = panel.querySelector<HTMLButtonElement>('[data-canvasa-launch-topic]')
+        if (btn) btn.disabled = this._busy || !this._topic.trim()
+      })
+      topicInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') this._handleTopicGo()
+      })
+    }
+    panel.querySelector<HTMLButtonElement>('[data-canvasa-launch-topic]')?.addEventListener('click', () => this._handleTopicGo())
+
+    // Mount the source picker + PDF drop
+    const srcMount = panel.querySelector<HTMLElement>('[data-canvasa-source-picker]')
+    if (srcMount) this._mountSourcePicker(srcMount)
+    const pdfMount = panel.querySelector<HTMLElement>('[data-canvasa-pdf-drop]')
+    if (pdfMount) this._mountPdfDrop(pdfMount)
+  }
+
+  private _handleTopicGo(): void {
+    const t = this._topic.trim()
+    if (!t) return
+    this._launch('ask', { ask: t, mode: 'teach' })
+  }
+
+  // Source picker — Internal wiki + External wiki, debounced search
+  private _mountSourcePicker(mount: HTMLElement): void {
+    let src: SourceKind = 'internal'
+    let q = ''
+    let results: WikiSearchResult[] = []
+    let searching = false
+    let debounceTimer: number | null = null
+
+    const sources: { key: SourceKind; lbl: string; sub: string }[] = [
+      { key: 'internal', lbl: 'Internal wiki', sub: 'SuperStem Physics + AI + HS concept graphs' },
+      { key: 'external', lbl: 'External wiki', sub: 'Wikipedia — live' },
+    ]
+
+    const render = () => {
+      mount.innerHTML = `
+        <h2>Or, point at a source.</h2>
+        <div class="tutor-sources">
+          ${sources.map((s) => `
+            <button type="button" class="tutor-source${src === s.key ? ' is-active' : ''}" data-canvasa-src="${s.key}">
+              <div class="tutor-source__row">
+                <span class="tutor-source__dot"></span>
+                <div>
+                  <div class="tutor-source__lbl">${escapeHtml(s.lbl)}</div>
+                  <div class="tutor-source__sub">${escapeHtml(s.sub)}</div>
+                </div>
+              </div>
+            </button>`).join('')}
+        </div>
+        <input type="text" class="tutor-input tutor-input--sm" data-canvasa-src-q
+               value="${escapeAttr(q)}" placeholder="Type to search the selected source…">
+        ${searching ? '<div class="tutor-status">Searching…</div>' : ''}
+        ${results.length ? `
+          <div class="tutor-results">
+            ${results.slice(0, 10).map((r) => `
+              <button type="button" class="tutor-result" data-canvasa-pick='${escapeAttr(JSON.stringify({ url: r.url, title: r.title }))}'>
+                <div class="tutor-result__ttl">${escapeHtml(r.title)}</div>
+                ${r.description || r.desc || r.snippet ? `<div class="tutor-result__desc">${escapeHtml(r.description || r.desc || r.snippet || '')}</div>` : ''}
+              </button>`).join('')}
+          </div>` : ''}
+        <div class="tutor-hint">
+          Searches across SuperStem Physics Wiki (1400+ articles) · AI Wiki · HS Physics/Math/Chemistry concept graphs.
+        </div>
+      `
+      // Wire
+      mount.querySelectorAll<HTMLButtonElement>('[data-canvasa-src]').forEach((b) => {
+        b.addEventListener('click', () => { src = b.dataset.canvasaSrc as SourceKind; render() })
+      })
+      const inp = mount.querySelector<HTMLInputElement>('[data-canvasa-src-q]')
+      inp?.addEventListener('input', () => {
+        q = inp.value
+        if (debounceTimer) clearTimeout(debounceTimer)
+        if (!q.trim()) { results = []; render(); return }
+        debounceTimer = window.setTimeout(async () => {
+          searching = true; render()
+          try {
+            const res = src === 'external'
+              ? await canvasaApi.wikiSearch(q.trim())
+              : await canvasaApi.superstemSearch(q.trim())
+            results = res.results || []
+          } catch { results = [] }
+          finally { searching = false; render() }
+        }, 300)
+      })
+      mount.querySelectorAll<HTMLButtonElement>('[data-canvasa-pick]').forEach((b) => {
+        b.addEventListener('click', () => {
+          try {
+            const picked = JSON.parse(b.dataset.canvasaPick || '{}') as { url?: string; title?: string }
+            if (picked.url) this._launchUrl(picked.url, picked.title)
+          } catch { /* noop */ }
+        })
+      })
+    }
+    render()
+  }
+
+  private _mountPdfDrop(mount: HTMLElement): void {
+    mount.innerHTML = `
+      <label class="tutor-pdfdrop" data-canvasa-pdf-label>
+        <input type="file" accept="application/pdf" hidden data-canvasa-pdf-input>
+        <span>Drop a PDF here, or <u>browse</u></span>
+      </label>
+    `
+    const input = mount.querySelector<HTMLInputElement>('[data-canvasa-pdf-input]')
+    const label = mount.querySelector<HTMLLabelElement>('[data-canvasa-pdf-label]')
+    input?.addEventListener('change', () => {
+      const f = input.files?.[0]
+      if (f) this._launchPdf(f)
+    })
+    label?.addEventListener('dragover', (e) => { e.preventDefault(); label.classList.add('is-drag') })
+    label?.addEventListener('dragleave', () => label.classList.remove('is-drag'))
+    label?.addEventListener('drop', (e) => {
+      e.preventDefault(); label.classList.remove('is-drag')
+      const f = (e as DragEvent).dataTransfer?.files?.[0]
+      if (f && f.type === 'application/pdf') this._launchPdf(f)
+    })
+  }
+
+  // ── Concept library tab ─────────────────────────────────────────
+
+  private async _renderConcepts(panel: HTMLElement): Promise<void> {
+    panel.innerHTML = `<section class="tutor-section">
+      <h2>Concept library</h2>
+      <div class="tutor-section__sub" data-canvasa-concepts-sub>Loading…</div>
+      <div class="tutor-row" style="margin-bottom: 14px;">
+        <input type="text" class="tutor-input tutor-input--sm" data-canvasa-concept-q
+               value="${escapeAttr(this._conceptQuery)}" placeholder="Search concepts…">
+        <div class="tutor-chip-group" data-canvasa-concept-chips>
+          ${(['all', 'HS', 'UG', 'G'] as ConceptLevel[]).map((l) => `
+            <button type="button" class="tutor-chip${this._conceptLevel === l ? ' is-active' : ''}" data-canvasa-clvl="${l}">${l === 'all' ? 'All' : l}</button>`).join('')}
+        </div>
+      </div>
+      <div data-canvasa-concept-topics></div>
+    </section>`
+
+    const sub = panel.querySelector<HTMLElement>('[data-canvasa-concepts-sub]')
+    const wrap = panel.querySelector<HTMLElement>('[data-canvasa-concept-topics]')
+    if (!sub || !wrap) return
+
+    // Filter chips
+    panel.querySelectorAll<HTMLButtonElement>('[data-canvasa-clvl]').forEach((b) => {
+      b.addEventListener('click', () => {
+        this._conceptLevel = b.dataset.canvasaClvl as ConceptLevel
+        panel.querySelectorAll<HTMLButtonElement>('[data-canvasa-clvl]').forEach((x) =>
+          x.classList.toggle('is-active', x.dataset.canvasaClvl === this._conceptLevel))
+        this._rerenderConceptTopics(wrap)
+      })
+    })
+
+    // Search input (debounced)
+    let cdebounce: number | null = null
+    const cq = panel.querySelector<HTMLInputElement>('[data-canvasa-concept-q]')
+    cq?.addEventListener('input', () => {
+      this._conceptQuery = cq.value
+      if (cdebounce) clearTimeout(cdebounce)
+      cdebounce = window.setTimeout(() => this._rerenderConceptTopics(wrap), 180)
+    })
+
+    if (!this._topicsData.length) {
+      try {
+        const d: LibraryTopicsResponse = await canvasaApi.libraryTopics()
+        this._topicsData = d.topics || []
+      } catch (cause) {
+        sub.textContent = 'Failed to load: ' + String(cause)
+        this._fireError('library-topics-failed', String(cause), cause)
+        return
+      }
+    }
+    const total = this._topicsData.reduce((acc, t) => acc + (t.lessons || []).length, 0)
+    sub.textContent = `${total.toLocaleString()} lessons across ${this._topicsData.length} topics — click a section to expand.`
+    this._rerenderConceptTopics(wrap)
+  }
+
+  private _rerenderConceptTopics(wrap: HTMLElement): void {
+    const lvl = this._conceptLevel, q = this._conceptQuery.toLowerCase().trim()
+    wrap.innerHTML = this._topicsData.map((t, i) => {
+      let count = (t.lessons || []).length
+      if (lvl !== 'all' || q) {
+        count = (t.lessons || []).filter((l) => {
+          const cl = (l.level || 'HS') as ConceptLevel
+          const lvlOk = lvl === 'all' || cl === lvl
+          const txtOk = !q || (l.title || '').toLowerCase().includes(q)
+          return lvlOk && txtOk
+        }).length
+      }
+      const expanded = this._expanded.get('c:' + i) ?? (i === 0)
+      const filtered = (lvl !== 'all' || q)
+      return `
+        <div class="tutor-topic${expanded ? ' is-expanded' : ''}" data-canvasa-ctopic="${i}" style="${filtered && count === 0 ? 'display:none;' : ''}">
+          <div class="tutor-topic__head" data-canvasa-ctoggle="${i}">
+            <span class="tutor-topic__icon">${escapeHtml(t.icon || '📘')}</span>
+            <span class="tutor-topic__name">${escapeHtml(t.name)}</span>
+            <span class="tutor-topic__count">${filtered ? `${count} of ${(t.lessons || []).length} match` : `${count} lessons`}</span>
+            <span class="tutor-topic__chev">▶</span>
+          </div>
+          <div class="tutor-topic__body" data-canvasa-ctopic-body="${i}" data-rendered="0"></div>
+        </div>`
+    }).join('')
+
+    wrap.querySelectorAll<HTMLElement>('[data-canvasa-ctoggle]').forEach((head) => {
+      head.addEventListener('click', () => {
+        const idx = +(head.dataset.canvasaCtoggle || '0')
+        const topic = wrap.querySelector<HTMLElement>(`[data-canvasa-ctopic="${idx}"]`)
+        if (!topic) return
+        const willExpand = !topic.classList.contains('is-expanded')
+        topic.classList.toggle('is-expanded', willExpand)
+        this._expanded.set('c:' + idx, willExpand)
+        if (willExpand) this._renderConceptTopicBody(wrap, idx, 0)
+      })
+    })
+
+    // Auto-render first expanded section's body
+    this._topicsData.forEach((_, i) => {
+      if (this._expanded.get('c:' + i) ?? (i === 0)) this._renderConceptTopicBody(wrap, i, this._pageState.get('c:' + i) ?? 0)
+    })
+  }
+
+  private _renderConceptTopicBody(wrap: HTMLElement, idx: number, page: number): void {
+    const topic = this._topicsData[idx]
+    if (!topic) return
+    const body = wrap.querySelector<HTMLElement>(`[data-canvasa-ctopic-body="${idx}"]`)
+    if (!body) return
+    const lvl = this._conceptLevel, q = this._conceptQuery.toLowerCase().trim()
+    const filtered = (topic.lessons || []).filter((l) => {
+      const cl = (l.level || 'HS') as ConceptLevel
+      const lvlOk = lvl === 'all' || cl === lvl
+      const txtOk = !q || (l.title || '').toLowerCase().includes(q)
+      return lvlOk && txtOk
+    })
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+    if (page < 0) page = 0
+    if (page >= totalPages) page = totalPages - 1
+    this._pageState.set('c:' + idx, page)
+    const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
+    body.innerHTML = `
+      <div class="tutor-card-grid">
+        ${slice.map((l) => {
+          const level = l.level || 'HS'
+          return `<button type="button" class="tutor-card" data-canvasa-lesson="${escapeAttr(l.slug)}" data-canvasa-cached="${l.cached ? '1' : '0'}" data-canvasa-title="${escapeAttr(l.title)}" data-canvasa-source="concept">
+            <div class="tutor-card__title">${escapeHtml(l.title)}</div>
+            <div class="tutor-card__meta">
+              <span>${escapeHtml(level)}</span>
+              ${l.cached ? '<span class="tutor-card__cached">✓ cached</span>' : ''}
+              ${l.guide_cached ? '<span class="tutor-card__guide">⚡ guide</span>' : ''}
+            </div>
+          </button>`
+        }).join('')}
+      </div>
+      ${filtered.length > PAGE_SIZE ? `
+        <div class="tutor-pag">
+          <button type="button" data-canvasa-cpag-prev ${page <= 0 ? 'disabled' : ''}>← Prev</button>
+          <span>Page ${page + 1} of ${totalPages} · ${filtered.length} lesson${filtered.length === 1 ? '' : 's'}</span>
+          <button type="button" data-canvasa-cpag-next ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
+        </div>` : (filtered.length === 0 ? '<div class="tutor-empty">No matches in this topic.</div>' : '')}
+    `
+    body.dataset.rendered = '1'
+
+    body.querySelector<HTMLButtonElement>('[data-canvasa-cpag-prev]')?.addEventListener('click', (e) => {
+      e.stopPropagation(); this._renderConceptTopicBody(wrap, idx, page - 1)
+    })
+    body.querySelector<HTMLButtonElement>('[data-canvasa-cpag-next]')?.addEventListener('click', (e) => {
+      e.stopPropagation(); this._renderConceptTopicBody(wrap, idx, page + 1)
+    })
+    body.querySelectorAll<HTMLButtonElement>('[data-canvasa-lesson]').forEach((card) => {
+      card.addEventListener('click', () => {
+        this._handleLessonCardClick({
+          slug: card.dataset.canvasaLesson || '',
+          title: card.dataset.canvasaTitle || '',
+          cached: card.dataset.canvasaCached === '1',
+          source: 'concept',
+        })
+      })
+    })
+  }
+
+  // ── Problems tab ────────────────────────────────────────────────
+
+  private async _renderProblems(panel: HTMLElement): Promise<void> {
+    panel.innerHTML = `<section class="tutor-section">
+      <h2>Problems</h2>
+      <div class="tutor-section__sub" data-canvasa-problems-sub>Loading…</div>
+      <div class="tutor-row" style="margin-bottom: 14px;">
+        <input type="text" class="tutor-input tutor-input--sm" data-canvasa-prob-q
+               value="${escapeAttr(this._probQuery)}" placeholder="Search problems…">
+        <div class="tutor-chip-group" data-canvasa-prob-chips>
+          ${(['all', 'HS', 'UG', 'G', 'Olympiad', 'cached'] as ProbChip[]).map((c) => `
+            <button type="button" class="tutor-chip${this._probChip === c ? ' is-active' : ''}" data-canvasa-pchip="${c}">${c === 'all' ? 'All' : (c === 'cached' ? '✓' : c)}</button>`).join('')}
+        </div>
+      </div>
+      <div data-canvasa-problem-sections></div>
+    </section>`
+
+    const sub = panel.querySelector<HTMLElement>('[data-canvasa-problems-sub]')
+    const wrap = panel.querySelector<HTMLElement>('[data-canvasa-problem-sections]')
+    if (!sub || !wrap) return
+
+    panel.querySelectorAll<HTMLButtonElement>('[data-canvasa-pchip]').forEach((b) => {
+      b.addEventListener('click', () => {
+        this._probChip = b.dataset.canvasaPchip as ProbChip
+        panel.querySelectorAll<HTMLButtonElement>('[data-canvasa-pchip]').forEach((x) =>
+          x.classList.toggle('is-active', x.dataset.canvasaPchip === this._probChip))
+        this._rerenderProblemSections(wrap)
+      })
+    })
+
+    let pdebounce: number | null = null
+    const pq = panel.querySelector<HTMLInputElement>('[data-canvasa-prob-q]')
+    pq?.addEventListener('input', () => {
+      this._probQuery = pq.value
+      if (pdebounce) clearTimeout(pdebounce)
+      pdebounce = window.setTimeout(() => this._rerenderProblemSections(wrap), 180)
+    })
+
+    if (!this._problemsData.length) {
+      try {
+        const d: ProblemsLibraryResponse = await canvasaApi.problemsLibrary()
+        this._problemsData = d.sections || []
+      } catch (cause) {
+        sub.textContent = 'Failed to load: ' + String(cause)
+        this._fireError('problems-library-failed', String(cause), cause)
+        return
+      }
+    }
+    const total = this._problemsData.reduce((a, s) => a + (s.problems || []).length, 0)
+    sub.textContent = `${total.toLocaleString()} problems across ${this._problemsData.length} sections — click a section to expand.`
+    this._rerenderProblemSections(wrap)
+  }
+
+  private _filterProblems(section: ProblemSection): Problem[] {
+    const chip = this._probChip, q = this._probQuery.toLowerCase().trim()
+    return (section.problems || []).filter((p) => {
+      let chipOk = chip === 'all'
+      if (!chipOk) {
+        if (chip === 'cached') chipOk = !!p.cached
+        else if (chip === 'Olympiad') chipOk = (p.origin === 'physolympiad') || (p.source_kind === 'olympiad')
+        else chipOk = ((p.level || 'UG') === chip)
+      }
+      const txtOk = !q || (p.title || '').toLowerCase().includes(q) || (p.statement || '').toLowerCase().includes(q)
+      return chipOk && txtOk
+    })
+  }
+
+  private _rerenderProblemSections(wrap: HTMLElement): void {
+    const chipActive = this._probChip !== 'all' || !!this._probQuery
+    wrap.innerHTML = this._problemsData.map((s, i) => {
+      const count = chipActive ? this._filterProblems(s).length : (s.problems || []).length
+      const expanded = this._expanded.get('p:' + i) ?? (i === 0)
+      return `
+        <div class="tutor-topic${expanded ? ' is-expanded' : ''}" data-canvasa-psec="${i}" style="${chipActive && count === 0 ? 'display:none;' : ''}">
+          <div class="tutor-topic__head" data-canvasa-ptoggle="${i}">
+            <span class="tutor-topic__icon">${escapeHtml(s.icon || '📘')}</span>
+            <span class="tutor-topic__name">${escapeHtml(s.name)}</span>
+            <span class="tutor-topic__count">${chipActive ? `${count} of ${(s.problems || []).length} match` : `${count} problem${count === 1 ? '' : 's'}`}</span>
+            <span class="tutor-topic__chev">▶</span>
+          </div>
+          <div class="tutor-topic__body" data-canvasa-psec-body="${i}" data-rendered="0"></div>
+        </div>`
+    }).join('')
+
+    wrap.querySelectorAll<HTMLElement>('[data-canvasa-ptoggle]').forEach((head) => {
+      head.addEventListener('click', () => {
+        const idx = +(head.dataset.canvasaPtoggle || '0')
+        const sec = wrap.querySelector<HTMLElement>(`[data-canvasa-psec="${idx}"]`)
+        if (!sec) return
+        const willExpand = !sec.classList.contains('is-expanded')
+        sec.classList.toggle('is-expanded', willExpand)
+        this._expanded.set('p:' + idx, willExpand)
+        if (willExpand) void this._renderProblemSectionBody(wrap, idx, 0)
+      })
+    })
+
+    // Auto-render initially expanded sections
+    this._problemsData.forEach((_, i) => {
+      if (this._expanded.get('p:' + i) ?? (i === 0)) void this._renderProblemSectionBody(wrap, i, this._pageState.get('p:' + i) ?? 0)
+    })
+  }
+
+  private async _renderProblemSectionBody(wrap: HTMLElement, idx: number, page: number): Promise<void> {
+    const section = this._problemsData[idx]
+    if (!section) return
+    const body = wrap.querySelector<HTMLElement>(`[data-canvasa-psec-body="${idx}"]`)
+    if (!body) return
+    const filtered = this._filterProblems(section)
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+    if (page < 0) page = 0
+    if (page >= totalPages) page = totalPages - 1
+    this._pageState.set('p:' + idx, page)
+    const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
+    body.innerHTML = `
+      <div class="tutor-prob-list">
+        ${slice.map((p) => {
+          const level = p.level || 'UG'
+          const diff = p.difficulty || 'medium'
+          return `<button type="button" class="tutor-prob" data-canvasa-lesson="${escapeAttr(p.slug)}" data-canvasa-cached="${p.cached ? '1' : '0'}" data-canvasa-title="${escapeAttr(p.title)}" data-canvasa-source="problem" data-canvasa-statement="${escapeAttr(p.statement || '')}">
+            <div class="tutor-prob__head">
+              <span class="tutor-prob__title">${escapeHtml(p.title)}</span>
+              <span class="tutor-pill tutor-pill--${escapeAttr(diff)}">${escapeHtml(diff)}</span>
+              <span class="tutor-pill">${escapeHtml(level)}</span>
+              ${p.source ? `<span class="tutor-prob__src">· ${escapeHtml(p.source)}</span>` : ''}
+              ${p.cached ? '<span class="tutor-prob__cached" title="Cached — instant load">✓</span>' : ''}
+              ${p.guide_cached ? '<span class="tutor-prob__guide" title="Figure-It-Out cached">⚡</span>' : ''}
+            </div>
+            ${p.statement ? `<div class="tutor-prob__statement">${p.statement}</div>` : ''}
+          </button>`
+        }).join('')}
+      </div>
+      ${filtered.length > PAGE_SIZE ? `
+        <div class="tutor-pag">
+          <button type="button" data-canvasa-ppag-prev ${page <= 0 ? 'disabled' : ''}>← Prev</button>
+          <span>Page ${page + 1} of ${totalPages} · ${filtered.length} result${filtered.length === 1 ? '' : 's'}</span>
+          <button type="button" data-canvasa-ppag-next ${page >= totalPages - 1 ? 'disabled' : ''}>Next →</button>
+        </div>` : (filtered.length === 0 ? '<div class="tutor-empty">No matches in this section.</div>' : '')}
+    `
+    body.dataset.rendered = '1'
+
+    body.querySelector<HTMLButtonElement>('[data-canvasa-ppag-prev]')?.addEventListener('click', (e) => {
+      e.stopPropagation(); void this._renderProblemSectionBody(wrap, idx, page - 1)
+    })
+    body.querySelector<HTMLButtonElement>('[data-canvasa-ppag-next]')?.addEventListener('click', (e) => {
+      e.stopPropagation(); void this._renderProblemSectionBody(wrap, idx, page + 1)
+    })
+    body.querySelectorAll<HTMLButtonElement>('[data-canvasa-lesson]').forEach((b) => {
+      b.addEventListener('click', () => {
+        this._handleLessonCardClick({
+          slug: b.dataset.canvasaLesson || '',
+          title: b.dataset.canvasaTitle || '',
+          cached: b.dataset.canvasaCached === '1',
+          source: 'problem',
+          statement: b.dataset.canvasaStatement || '',
+        })
+      })
+    })
+
+    // KaTeX on the just-rendered slice
+    const katex = await ensureKatex(this.getAttribute('katex-cdn'))
+    renderMathInChildren(body, katex)
+  }
+
+  // ── Lesson card click → mode picker → launch ────────────────────
+
+  private _handleLessonCardClick(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string }): void {
+    const lessonMode = (this.getAttribute('lesson-mode') as CanvasaLessonMode) || 'picker'
+
+    // Fire host-overridable event
+    const ev = new CustomEvent('canvasa-lesson-click', {
+      detail: { ...detail, mode: lessonMode },
+      bubbles: true, composed: true, cancelable: true,
+    })
+    const proceed = this.dispatchEvent(ev)
+    if (!proceed) return  // host called preventDefault()
+
+    if (lessonMode === 'teach' || lessonMode === 'guide') {
+      this._launch('lesson', { lesson: detail.slug, mode: lessonMode, statement: detail.statement ?? '' })
+    } else {
+      // Show picker modal
+      this._openModePicker(detail)
+    }
+  }
+
+  private _openModePicker(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string }): void {
+    const modal = document.createElement('div')
+    modal.className = 'tutor-mode-modal'
+    modal.innerHTML = `
+      <div class="tutor-mode-modal__card" role="dialog" aria-label="Pick a learning mode">
+        <h3 class="tutor-mode-modal__title">${escapeHtml(detail.title || 'Pick a learning mode')}</h3>
+        <p class="tutor-mode-modal__sub">Two ways to learn this — pick what suits you.</p>
+        <div class="tutor-mode-modal__opts">
+          <button type="button" class="tutor-mode-modal__opt" data-mode="teach">
+            <div class="tutor-mode-modal__opt__title">Walk me through it (Teach-me)</div>
+            <div class="tutor-mode-modal__opt__desc">Linear lesson with synthesized audio + chalkboard visuals.</div>
+          </button>
+          <button type="button" class="tutor-mode-modal__opt" data-mode="guide">
+            <div class="tutor-mode-modal__opt__title">Guide me to figure it out</div>
+            <div class="tutor-mode-modal__opt__desc">Socratic checkpoints + hints. You drive; the tutor scaffolds.</div>
+          </button>
+        </div>
+        <button type="button" class="tutor-mode-modal__close" data-cancel>Cancel</button>
+      </div>
+    `
+    document.body.appendChild(modal)
+    const close = () => modal.remove()
+    modal.addEventListener('click', (e) => { if (e.target === modal) close() })
+    modal.querySelector<HTMLButtonElement>('[data-cancel]')?.addEventListener('click', close)
+    modal.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const mode = (b.dataset.mode as CanvasaLessonMode) || 'teach'
+        close()
+        if (detail.slug) this._launch('lesson', { lesson: detail.slug, mode, statement: detail.statement ?? '' })
+        else if (detail.statement) this._launch('ask', { ask: detail.statement, mode })
+      })
+    })
+    // ESC to close
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onKey) } }
+    document.addEventListener('keydown', onKey)
+  }
+
+  // ── Launch (redirect to /tutor or /guide) ───────────────────────
 
   private _launch(kind: 'ask' | 'lesson', payload: Record<string, string>): void {
-    // Fire the canvasa-launch event so hosts can intercept + route inline.
     const ev = new CustomEvent('canvasa-launch', {
       detail: { kind, payload }, bubbles: true, composed: true, cancelable: true,
     })
-    const proceed = this.dispatchEvent(ev)
-    if (!proceed) return  // host called preventDefault() — handle it themselves
+    if (!this.dispatchEvent(ev)) return  // host intercepts
 
-    // Default: redirect to canvas-a backend's /tutor or /guide URL.
     const mode = payload.mode === 'guide' ? 'guide' : 'tutor'
     const path = mode === 'guide' ? '/guide' : '/tutor'
     const qs = new URLSearchParams()
@@ -339,8 +961,8 @@ export class CanvasaTutorElement extends HTMLElement {
     qs.set('brand', this._tenant())
     if (typeof window !== 'undefined' && window.location) {
       qs.set('return', window.location.href)
-      const target = this.getAttribute('lesson-target') || 'self'
       const url = `${getCanvasaHost()}${path}?${qs.toString()}`
+      const target = this.getAttribute('lesson-target') || 'self'
       if (target === 'blank') {
         window.open(url, '_blank', 'noopener')
       } else if (target.startsWith('.') || target.startsWith('#')) {
@@ -351,18 +973,57 @@ export class CanvasaTutorElement extends HTMLElement {
       }
     }
   }
-}
 
-// Tiny HTML escape helper to keep brand-config copy + slot content safe
-// when we string-template into innerHTML.
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c] as string))
+  private _launchUrl(srcUrl: string, title?: string): void {
+    this._busy = true; this._busyMsg = 'Opening tutor…'; this._render()
+    const qs = new URLSearchParams()
+    qs.set('ask', (title && title.trim()) || srcUrl)
+    qs.set('brand', this._tenant())
+    if (typeof window !== 'undefined' && window.location) qs.set('return', window.location.href)
+    window.location.assign(`${getCanvasaHost()}/tutor?${qs.toString()}`)
+  }
+
+  private async _launchPdf(file: File): Promise<void> {
+    this._busy = true; this._busyMsg = 'Reading PDF…'; this._errorMsg = ''; this._render()
+    try {
+      const res = await canvasaApi.generateFromPdf(file)
+      if (res.ready_url) window.location.assign(res.ready_url)
+      else { this._busyMsg = 'Building from PDF — first beat in ~12-18s…'; this._render() }
+    } catch (cause) {
+      this._errorMsg = 'PDF upload failed: ' + String(cause); this._busy = false
+      this._render()
+      this._fireError('pdf-upload-failed', String(cause), cause)
+    }
+  }
+
+  // ── Events ──────────────────────────────────────────────────────
+
+  private _fireTab(): void {
+    this.dispatchEvent(new CustomEvent('canvasa-tab-change', {
+      detail: { tab: this._tab }, bubbles: true, composed: true,
+    }))
+  }
+
+  private _markReady(): void {
+    if (this._ready) return
+    this._ready = true
+    this.dispatchEvent(new CustomEvent('canvasa-ready', {
+      detail: { version: CANVASA_SDK_VERSION, tenant: this._tenant() },
+      bubbles: true, composed: true,
+    }))
+    if (this._debug()) console.log('[canvasa] ready', { tenant: this._tenant(), brand: this._brand, counts: this._counts })
+  }
+
+  private _fireError(code: string, message: string, cause?: unknown): void {
+    this.dispatchEvent(new CustomEvent('canvasa-error', {
+      detail: { code, message, cause }, bubbles: true, composed: true,
+    }))
+    if (this._debug()) console.warn('[canvasa] error', code, message)
+  }
 }
 
 // ───────────────────────────────────────────────────────────────────
-// Registration helper — idempotent
+// Registration
 // ───────────────────────────────────────────────────────────────────
 
 export function registerCanvasaTutor(): void {
