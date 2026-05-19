@@ -568,3 +568,73 @@
   pointer-events: none;
   user-select: none;
 }
+
+/* Concept-library + Problems accordion rows — each topic/section is a
+ * card-style row with a clear left rule, padding, and a hover state so
+ * collapsed sections look like real navigation, not raw text. */
+.tutor-topic {
+  border: 1px solid var(--tutor-border, #e3dccb);
+  border-radius: 10px;
+  background: var(--tutor-surface, #fdfaf2);
+  margin: 10px 0;
+  overflow: hidden;
+  transition: box-shadow 0.16s, border-color 0.16s;
+}
+.tutor-topic:hover {
+  border-color: var(--tutor-accent, #b08c30);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.tutor-topic.is-expanded {
+  border-color: var(--tutor-accent, #b08c30);
+  background: var(--tutor-surface, #fdfaf2);
+}
+.tutor-topic__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  border-left: 4px solid var(--tutor-accent, #b08c30);
+}
+.tutor-topic__icon {
+  flex: 0 0 28px;
+  font-size: 22px;
+  line-height: 1;
+  text-align: center;
+}
+.tutor-topic__name {
+  flex: 1 1 auto;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tutor-text, #2c2418);
+  font-family: var(--tutor-font-display, 'Playfair Display', Georgia, serif);
+  letter-spacing: 0.005em;
+}
+.tutor-topic__count {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--tutor-muted, #7a6c50);
+  font-family: var(--tutor-font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.tutor-topic__chev {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--tutor-muted, #7a6c50);
+  margin-left: 8px;
+  transition: transform 0.18s ease;
+  display: inline-block;
+}
+.tutor-topic.is-expanded .tutor-topic__chev {
+  transform: rotate(90deg);
+  color: var(--tutor-accent, #b08c30);
+}
+.tutor-topic__body {
+  padding: 0 20px 18px;
+  display: none;
+}
+.tutor-topic.is-expanded .tutor-topic__body {
+  display: block;
+}
