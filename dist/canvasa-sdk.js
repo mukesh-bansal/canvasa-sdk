@@ -1,17 +1,17 @@
-const x = "0.1.0-alpha.2";
-let M = "https://canvasa.olympiz.ai", k = "default";
-function T(i) {
-  i.host && (M = i.host.replace(/\/$/, "")), i.tenant && (k = i.tenant);
+const x = "0.1.0-alpha.3";
+let q = "https://canvasa.olympiz.ai", k = "default";
+function A(i) {
+  i.host && (q = i.host.replace(/\/$/, "")), i.tenant && (k = i.tenant);
 }
-function C(i, t) {
-  const e = new URL(`${M}/api${i}`);
+function E(i, t) {
+  const e = new URL(`${q}/api${i}`);
   if (t)
     for (const [o, r] of Object.entries(t))
       r != null && r !== "" && e.searchParams.set(o, String(r));
   return e.toString();
 }
 async function g(i, t) {
-  const e = await fetch(C(i, t), {
+  const e = await fetch(E(i, t), {
     headers: { "X-Tutor-Tenant": k, Accept: "application/json" },
     credentials: "omit"
   });
@@ -19,7 +19,7 @@ async function g(i, t) {
   return await e.json();
 }
 async function P(i, t) {
-  const e = await fetch(C(i), {
+  const e = await fetch(E(i), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -33,7 +33,7 @@ async function P(i, t) {
   return await e.json();
 }
 async function D(i, t) {
-  const e = await fetch(C(i), {
+  const e = await fetch(E(i), {
     method: "POST",
     headers: { "X-Tutor-Tenant": k, Accept: "application/json" },
     body: t,
@@ -57,12 +57,12 @@ const _ = {
   superstemSearch: (i) => g("/superstem-search", { q: i }),
   // Phase 3 endpoint — graceful fallback handled in canvasa-tutor.ts when missing
   brand: (i) => g(`/brand/${encodeURIComponent(i)}`)
-}, H = ':root,.tutor-root{--tutor-bg: #fbfaf6;--tutor-surface: #ffffff;--tutor-surface-soft: #f6f4ee;--tutor-text: #1a1a2e;--tutor-muted: #4a4a5a;--tutor-faint: #8b8b9b;--tutor-border: #e7ecf3;--tutor-border-soft: #efefe7;--tutor-accent: #c9a227;--tutor-accent-soft: rgba(201, 162, 39, .12);--tutor-accent-strong:#8f7016;--tutor-on-accent: #14213d;--tutor-primary: #14213d;--tutor-primary-hover:#0a162b;--tutor-on-primary: #ffffff;--tutor-success: #047857;--tutor-warning: #b45309;--tutor-danger: #b91c1c;--tutor-radius: 12px;--tutor-radius-sm: 8px;--tutor-radius-lg: 18px;--tutor-font-display: "Playfair Display", Georgia, serif;--tutor-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;--tutor-font-mono: "JetBrains Mono", ui-monospace, monospace;--tutor-shadow-sm: 0 1px 3px rgba(0,0,0,.04);--tutor-shadow: 0 4px 14px rgba(0,0,0,.06)}.tutor-page{max-width:1100px;margin:0 auto;padding:32px 16px 64px;font-family:var(--tutor-font-body);color:var(--tutor-text);background:var(--tutor-bg)}.tutor-hero{text-align:center;margin-bottom:40px}.tutor-hero h1{font-family:var(--tutor-font-display);font-size:clamp(2rem,4vw,3rem);line-height:1.15;margin:0 0 8px;color:var(--tutor-text);font-weight:700}.tutor-hero h1 em{color:var(--tutor-accent-strong);font-style:italic}.tutor-hero p{color:var(--tutor-muted);font-size:1.05rem;margin:0}.tutor-tabs{display:flex;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--tutor-border);margin-bottom:24px}.tutor-tab{background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 0;font:inherit;color:var(--tutor-muted);cursor:pointer;font-size:.95rem;white-space:nowrap;transition:color .15s,border-color .15s}.tutor-tab:hover{color:var(--tutor-text)}.tutor-tab.is-active{color:var(--tutor-text);border-bottom-color:var(--tutor-accent-strong);font-weight:500}.tutor-tab__count{color:var(--tutor-muted);font-size:.78rem;margin-left:4px;font-weight:400}.tutor-section{background:var(--tutor-surface);border:1px solid var(--tutor-border);border-radius:var(--tutor-radius);padding:20px 22px;margin-bottom:16px;box-shadow:var(--tutor-shadow-sm)}.tutor-section h2{font-family:var(--tutor-font-display);font-size:1.35rem;font-weight:600;margin:0 0 12px;color:var(--tutor-text)}.tutor-section h3{font-family:var(--tutor-font-display);font-size:1.05rem;font-weight:500;margin:0 0 8px;color:var(--tutor-text);display:flex;align-items:center;gap:8px}.tutor-section__sub{font-size:.78rem;color:var(--tutor-muted);margin:-8px 0 14px}.tutor-input{display:block;width:100%;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-text);font:inherit;font-size:.95rem;transition:border-color .15s,box-shadow .15s}.tutor-input::placeholder{color:var(--tutor-faint)}.tutor-input:focus{outline:none;border-color:var(--tutor-accent-strong);box-shadow:0 0 0 3px var(--tutor-accent-soft)}.tutor-input--sm{padding:8px 12px;font-size:.9rem}.tutor-row{display:flex;gap:10px;flex-wrap:wrap}@media (min-width: 640px){.tutor-row{flex-wrap:nowrap}}.tutor-row>.tutor-input{flex:1 1 auto}.tutor-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:var(--tutor-radius-sm);border:1px solid transparent;background:var(--tutor-primary);color:var(--tutor-on-primary);font:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,opacity .15s}.tutor-btn:hover:not(:disabled){background:var(--tutor-primary-hover)}.tutor-btn:disabled{opacity:.5;cursor:not-allowed}.tutor-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);font:inherit;font-size:.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}.tutor-chip:hover{border-color:var(--tutor-accent-strong);color:var(--tutor-text)}.tutor-chip.is-active{background:var(--tutor-primary);color:var(--tutor-on-primary);border-color:var(--tutor-primary)}.tutor-sources{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}@media (min-width: 720px){.tutor-sources{grid-template-columns:1fr 1fr 1fr}}.tutor-source{text-align:left;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;transition:border-color .15s,background .15s}.tutor-source:hover{border-color:var(--tutor-accent-strong)}.tutor-source.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-source__row{display:flex;gap:10px;align-items:flex-start}.tutor-source__dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--tutor-border);margin-top:4px;flex-shrink:0}.tutor-source.is-active .tutor-source__dot{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-strong)}.tutor-source__lbl{font-weight:500;font-size:.9rem}.tutor-source__sub{font-size:.78rem;color:var(--tutor-muted);margin-top:2px}.tutor-results{margin-top:12px;border:1px solid var(--tutor-border);border-radius:var(--tutor-radius-sm);background:var(--tutor-bg);overflow:hidden}.tutor-result{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;font:inherit;color:var(--tutor-text);cursor:pointer;transition:background .12s;border-bottom:1px solid var(--tutor-border)}.tutor-result:last-child{border-bottom:none}.tutor-result:hover{background:var(--tutor-surface-soft)}.tutor-result__title{font-size:.9rem;font-weight:500}.tutor-result__blurb{font-size:.78rem;color:var(--tutor-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-hint{font-size:.72rem;color:var(--tutor-muted);margin-top:12px}.tutor-drop{border:2px dashed var(--tutor-border);background:var(--tutor-bg);border-radius:var(--tutor-radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}.tutor-drop:hover{border-color:var(--tutor-accent-strong)}.tutor-drop.is-hover{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-drop__icon{font-size:1.6rem;margin-bottom:8px}.tutor-drop__hint{color:var(--tutor-text);font-size:.92rem}.tutor-drop__hint strong{color:var(--tutor-accent-strong)}.tutor-card-grid{display:grid;grid-template-columns:1fr;gap:10px}@media (min-width: 720px){.tutor-card-grid{grid-template-columns:1fr 1fr}}@media (min-width: 1024px){.tutor-card-grid{grid-template-columns:1fr 1fr 1fr}}.tutor-card{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;transition:border-color .15s,box-shadow .15s}.tutor-card:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-card__title{font-size:.9rem}.tutor-card__meta{margin-top:6px;display:flex;gap:10px;font-size:.7rem;color:var(--tutor-muted);align-items:center}.tutor-card__cached{color:var(--tutor-success)}.tutor-prob{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}.tutor-prob:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-prob__head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tutor-prob__title{font-size:.9rem;font-weight:500}.tutor-prob__statement{margin-top:6px;font-size:.78rem;color:var(--tutor-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-pill{font-size:.62rem;padding:2px 6px;border-radius:4px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);text-transform:lowercase;letter-spacing:.04em}.tutor-pill--easy{color:var(--tutor-success);border-color:#0478574d}.tutor-pill--medium{color:var(--tutor-warning);border-color:#b453094d}.tutor-pill--hard{color:var(--tutor-danger);border-color:#b91c1c4d}.tutor-status{margin-top:12px;font-size:.85rem;color:var(--tutor-muted)}.tutor-status--error{color:var(--tutor-danger)}.tutor-empty{font-size:.88rem;color:var(--tutor-muted);padding:12px 0}.tutor-modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:#0d122073;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}.tutor-modal{background:var(--tutor-surface);border-radius:var(--tutor-radius-lg);box-shadow:0 20px 60px #0000004d;padding:28px 32px;width:100%;max-width:560px;font-family:var(--tutor-font-body);color:var(--tutor-text)}.tutor-modal__eyebrow{font-size:11px;font-weight:600;color:var(--tutor-accent-strong);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px}.tutor-modal__title{font-family:var(--tutor-font-display);font-size:22px;font-weight:600;margin:0 0 4px;color:var(--tutor-text)}.tutor-modal__sub{font-size:12px;color:var(--tutor-muted);margin:0 0 18px}.tutor-modal__option{display:block;width:100%;text-align:left;padding:16px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;margin-bottom:10px;transition:border-color .12s,background .12s}.tutor-modal__option:hover{border-color:var(--tutor-accent-strong)}.tutor-modal__option.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-modal__option-row{display:flex;align-items:flex-start;gap:12px}.tutor-modal__radio{margin-top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--tutor-border);flex-shrink:0;display:flex;align-items:center;justify-content:center}.tutor-modal__option.is-active .tutor-modal__radio{border-color:var(--tutor-accent-strong)}.tutor-modal__radio-dot{width:8px;height:8px;border-radius:50%;background:var(--tutor-accent-strong)}.tutor-modal__option-title{font-family:var(--tutor-font-display);font-style:italic;font-weight:600;font-size:16px;color:var(--tutor-accent-strong);display:inline}.tutor-modal__option-badge{margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.14em;padding:2px 6px;border-radius:3px;background:#3fcc7a2e;color:#1a7341;text-transform:uppercase}.tutor-modal__option-desc{font-size:12px;color:var(--tutor-muted);margin-top:6px;line-height:1.5}.tutor-modal__actions{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.tutor-btn--ghost{background:transparent;color:var(--tutor-muted);border:1px solid var(--tutor-border);padding:8px 16px;border-radius:var(--tutor-radius-sm);font:inherit;font-size:13px;cursor:pointer;transition:color .12s,border-color .12s}.tutor-btn--ghost:hover:not(:disabled){color:var(--tutor-text);border-color:var(--tutor-accent-strong)}.tutor-btn--ghost:disabled{opacity:.5;cursor:not-allowed}', f = 30;
+}, j = ':root,.tutor-root{--tutor-bg: #fbfaf6;--tutor-surface: #ffffff;--tutor-surface-soft: #f6f4ee;--tutor-text: #1a1a2e;--tutor-muted: #4a4a5a;--tutor-faint: #8b8b9b;--tutor-border: #e7ecf3;--tutor-border-soft: #efefe7;--tutor-accent: #c9a227;--tutor-accent-soft: rgba(201, 162, 39, .12);--tutor-accent-strong:#8f7016;--tutor-on-accent: #14213d;--tutor-primary: #14213d;--tutor-primary-hover:#0a162b;--tutor-on-primary: #ffffff;--tutor-success: #047857;--tutor-warning: #b45309;--tutor-danger: #b91c1c;--tutor-radius: 12px;--tutor-radius-sm: 8px;--tutor-radius-lg: 18px;--tutor-font-display: "Playfair Display", Georgia, serif;--tutor-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;--tutor-font-mono: "JetBrains Mono", ui-monospace, monospace;--tutor-shadow-sm: 0 1px 3px rgba(0,0,0,.04);--tutor-shadow: 0 4px 14px rgba(0,0,0,.06)}.tutor-page{max-width:1100px;margin:0 auto;padding:32px 16px 64px;font-family:var(--tutor-font-body);color:var(--tutor-text);background:var(--tutor-bg)}.tutor-hero{text-align:center;margin-bottom:40px}.tutor-hero h1{font-family:var(--tutor-font-display);font-size:clamp(2rem,4vw,3rem);line-height:1.15;margin:0 0 8px;color:var(--tutor-text);font-weight:700}.tutor-hero h1 em{color:var(--tutor-accent-strong);font-style:italic}.tutor-hero p{color:var(--tutor-muted);font-size:1.05rem;margin:0}.tutor-tabs{display:flex;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--tutor-border);margin-bottom:24px}.tutor-tab{background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 0;font:inherit;color:var(--tutor-muted);cursor:pointer;font-size:.95rem;white-space:nowrap;transition:color .15s,border-color .15s}.tutor-tab:hover{color:var(--tutor-text)}.tutor-tab.is-active{color:var(--tutor-text);border-bottom-color:var(--tutor-accent-strong);font-weight:500}.tutor-tab__count{color:var(--tutor-muted);font-size:.78rem;margin-left:4px;font-weight:400}.tutor-section{background:var(--tutor-surface);border:1px solid var(--tutor-border);border-radius:var(--tutor-radius);padding:20px 22px;margin-bottom:16px;box-shadow:var(--tutor-shadow-sm)}.tutor-section h2{font-family:var(--tutor-font-display);font-size:1.35rem;font-weight:600;margin:0 0 12px;color:var(--tutor-text)}.tutor-section h3{font-family:var(--tutor-font-display);font-size:1.05rem;font-weight:500;margin:0 0 8px;color:var(--tutor-text);display:flex;align-items:center;gap:8px}.tutor-section__sub{font-size:.78rem;color:var(--tutor-muted);margin:-8px 0 14px}.tutor-input{display:block;width:100%;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-text);font:inherit;font-size:.95rem;transition:border-color .15s,box-shadow .15s}.tutor-input::placeholder{color:var(--tutor-faint)}.tutor-input:focus{outline:none;border-color:var(--tutor-accent-strong);box-shadow:0 0 0 3px var(--tutor-accent-soft)}.tutor-input--sm{padding:8px 12px;font-size:.9rem}.tutor-row{display:flex;gap:10px;flex-wrap:wrap}@media (min-width: 640px){.tutor-row{flex-wrap:nowrap}}.tutor-row>.tutor-input{flex:1 1 auto}.tutor-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:var(--tutor-radius-sm);border:1px solid transparent;background:var(--tutor-primary);color:var(--tutor-on-primary);font:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,opacity .15s}.tutor-btn:hover:not(:disabled){background:var(--tutor-primary-hover)}.tutor-btn:disabled{opacity:.5;cursor:not-allowed}.tutor-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);font:inherit;font-size:.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}.tutor-chip:hover{border-color:var(--tutor-accent-strong);color:var(--tutor-text)}.tutor-chip.is-active{background:var(--tutor-primary);color:var(--tutor-on-primary);border-color:var(--tutor-primary)}.tutor-sources{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}@media (min-width: 720px){.tutor-sources{grid-template-columns:1fr 1fr 1fr}}.tutor-source{text-align:left;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;transition:border-color .15s,background .15s}.tutor-source:hover{border-color:var(--tutor-accent-strong)}.tutor-source.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-source__row{display:flex;gap:10px;align-items:flex-start}.tutor-source__dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--tutor-border);margin-top:4px;flex-shrink:0}.tutor-source.is-active .tutor-source__dot{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-strong)}.tutor-source__lbl{font-weight:500;font-size:.9rem}.tutor-source__sub{font-size:.78rem;color:var(--tutor-muted);margin-top:2px}.tutor-results{margin-top:12px;border:1px solid var(--tutor-border);border-radius:var(--tutor-radius-sm);background:var(--tutor-bg);overflow:hidden}.tutor-result{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;font:inherit;color:var(--tutor-text);cursor:pointer;transition:background .12s;border-bottom:1px solid var(--tutor-border)}.tutor-result:last-child{border-bottom:none}.tutor-result:hover{background:var(--tutor-surface-soft)}.tutor-result__title{font-size:.9rem;font-weight:500}.tutor-result__blurb{font-size:.78rem;color:var(--tutor-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-hint{font-size:.72rem;color:var(--tutor-muted);margin-top:12px}.tutor-drop{border:2px dashed var(--tutor-border);background:var(--tutor-bg);border-radius:var(--tutor-radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}.tutor-drop:hover{border-color:var(--tutor-accent-strong)}.tutor-drop.is-hover{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-drop__icon{font-size:1.6rem;margin-bottom:8px}.tutor-drop__hint{color:var(--tutor-text);font-size:.92rem}.tutor-drop__hint strong{color:var(--tutor-accent-strong)}.tutor-card-grid{display:grid;grid-template-columns:1fr;gap:10px}@media (min-width: 720px){.tutor-card-grid{grid-template-columns:1fr 1fr}}@media (min-width: 1024px){.tutor-card-grid{grid-template-columns:1fr 1fr 1fr}}.tutor-card{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;transition:border-color .15s,box-shadow .15s}.tutor-card:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-card__title{font-size:.9rem}.tutor-card__meta{margin-top:6px;display:flex;gap:10px;font-size:.7rem;color:var(--tutor-muted);align-items:center}.tutor-card__cached{color:var(--tutor-success)}.tutor-prob{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}.tutor-prob:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-prob__head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tutor-prob__title{font-size:.9rem;font-weight:500}.tutor-prob__statement{margin-top:6px;font-size:.78rem;color:var(--tutor-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-pill{font-size:.62rem;padding:2px 6px;border-radius:4px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);text-transform:lowercase;letter-spacing:.04em}.tutor-pill--easy{color:var(--tutor-success);border-color:#0478574d}.tutor-pill--medium{color:var(--tutor-warning);border-color:#b453094d}.tutor-pill--hard{color:var(--tutor-danger);border-color:#b91c1c4d}.tutor-status{margin-top:12px;font-size:.85rem;color:var(--tutor-muted)}.tutor-status--error{color:var(--tutor-danger)}.tutor-empty{font-size:.88rem;color:var(--tutor-muted);padding:12px 0}.tutor-modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:#0d122073;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}.tutor-modal{background:var(--tutor-surface);border-radius:var(--tutor-radius-lg);box-shadow:0 20px 60px #0000004d;padding:28px 32px;width:100%;max-width:560px;font-family:var(--tutor-font-body);color:var(--tutor-text)}.tutor-modal__eyebrow{font-size:11px;font-weight:600;color:var(--tutor-accent-strong);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px}.tutor-modal__title{font-family:var(--tutor-font-display);font-size:22px;font-weight:600;margin:0 0 4px;color:var(--tutor-text)}.tutor-modal__sub{font-size:12px;color:var(--tutor-muted);margin:0 0 18px}.tutor-modal__option{display:block;width:100%;text-align:left;padding:16px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;margin-bottom:10px;transition:border-color .12s,background .12s}.tutor-modal__option:hover{border-color:var(--tutor-accent-strong)}.tutor-modal__option.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-modal__option-row{display:flex;align-items:flex-start;gap:12px}.tutor-modal__radio{margin-top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--tutor-border);flex-shrink:0;display:flex;align-items:center;justify-content:center}.tutor-modal__option.is-active .tutor-modal__radio{border-color:var(--tutor-accent-strong)}.tutor-modal__radio-dot{width:8px;height:8px;border-radius:50%;background:var(--tutor-accent-strong)}.tutor-modal__option-title{font-family:var(--tutor-font-display);font-style:italic;font-weight:600;font-size:16px;color:var(--tutor-accent-strong);display:inline}.tutor-modal__option-badge{margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.14em;padding:2px 6px;border-radius:3px;background:#3fcc7a2e;color:#1a7341;text-transform:uppercase}.tutor-modal__option-desc{font-size:12px;color:var(--tutor-muted);margin-top:6px;line-height:1.5}.tutor-modal__actions{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.tutor-btn--ghost{background:transparent;color:var(--tutor-muted);border:1px solid var(--tutor-border);padding:8px 16px;border-radius:var(--tutor-radius-sm);font:inherit;font-size:13px;cursor:pointer;transition:color .12s,border-color .12s}.tutor-btn--ghost:hover:not(:disabled){color:var(--tutor-text);border-color:var(--tutor-accent-strong)}.tutor-btn--ghost:disabled{opacity:.5;cursor:not-allowed}', f = 30;
 function $() {
   return typeof window < "u" && window.CANVASA_HOST ? window.CANVASA_HOST : "https://canvasa.olympiz.ai";
 }
 let S = !1;
-function j() {
+function O() {
   if (S || typeof document > "u") return;
   const i = "canvasa-sdk-styles";
   if (document.getElementById(i)) {
@@ -70,7 +70,7 @@ function j() {
     return;
   }
   const t = document.createElement("style");
-  t.id = i, t.textContent = H, document.head.appendChild(t), S = !0;
+  t.id = i, t.textContent = j, document.head.appendChild(t), S = !0;
 }
 function h(i) {
   return i == null ? "" : String(i).replace(/[&<>"']/g, (t) => ({
@@ -85,7 +85,7 @@ function m(i) {
   return h(i).replace(/`/g, "&#96;");
 }
 let y = null, w = null;
-async function O(i) {
+async function B(i) {
   if (i === "off") return null;
   if (y) return y;
   if (typeof window > "u") return null;
@@ -99,7 +99,7 @@ async function O(i) {
         const e = document.createElement("link");
         e.rel = "stylesheet", e.href = `${t}/katex.min.css`, e.crossOrigin = "anonymous", document.head.appendChild(e);
       }
-      await A(`${t}/katex.min.js`), await A(`${t}/contrib/auto-render.min.js`);
+      await M(`${t}/katex.min.js`), await M(`${t}/contrib/auto-render.min.js`);
       for (let e = 0; e < 30; e++) {
         if (typeof window.renderMathInElement == "function")
           return y = window.renderMathInElement, y;
@@ -111,14 +111,14 @@ async function O(i) {
     return null;
   })(), w;
 }
-function A(i) {
+function M(i) {
   return new Promise((t, e) => {
     if (document.querySelector(`script[src="${i}"]`)) return t();
     const o = document.createElement("script");
     o.src = i, o.async = !0, o.crossOrigin = "anonymous", o.onload = () => t(), o.onerror = (r) => e(r), document.head.appendChild(o);
   });
 }
-function B(i, t) {
+function I(i, t) {
   if (t)
     try {
       t(i, {
@@ -136,13 +136,13 @@ function B(i, t) {
     } catch {
     }
 }
-const L = class L extends HTMLElement {
+const T = class T extends HTMLElement {
   constructor() {
     super(...arguments), this._brand = null, this._ready = !1, this._tab = "ondemand", this._topic = "", this._conceptQuery = "", this._conceptLevel = "all", this._probQuery = "", this._probChip = "all", this._topicsData = [], this._problemsData = [], this._counts = null, this._busy = !1, this._busyMsg = "", this._errorMsg = "", this._expanded = /* @__PURE__ */ new Map(), this._pageState = /* @__PURE__ */ new Map();
   }
   // ── Lifecycle ───────────────────────────────────────────────────
   connectedCallback() {
-    j(), this.classList.add("canvasa-tutor", "tutor-root", "tutor-page"), T({ host: $(), tenant: this._tenant() });
+    O(), this.classList.add("canvasa-tutor", "tutor-root", "tutor-page"), A({ host: $(), tenant: this._tenant() });
     const t = this.getAttribute("default-tab") || "ondemand";
     this._tab = t;
     const e = this.getAttribute("lesson"), o = this.getAttribute("ask");
@@ -160,7 +160,7 @@ const L = class L extends HTMLElement {
     (t = this._abort) == null || t.abort();
   }
   attributeChangedCallback(t, e, o) {
-    !this.isConnected || e === o || (t === "tenant" ? (T({ tenant: this._tenant() }), this._bootstrap()) : t === "default-tab" && o ? (this._tab = o, this._render()) : this._render());
+    !this.isConnected || e === o || (t === "tenant" ? (A({ tenant: this._tenant() }), this._bootstrap()) : t === "default-tab" && o ? (this._tab = o, this._render()) : this._render());
   }
   // ── Programmatic API ────────────────────────────────────────────
   setTenant(t) {
@@ -516,8 +516,8 @@ const L = class L extends HTMLElement {
     const a = t.querySelector(`[data-canvasa-ctopic-body="${e}"]`);
     if (!a) return;
     const n = this._conceptLevel, s = this._conceptQuery.toLowerCase().trim(), c = (r.lessons || []).filter((l) => {
-      const v = l.level || "HS", q = n === "all" || v === n, z = !s || (l.title || "").toLowerCase().includes(s);
-      return q && z;
+      const v = l.level || "HS", z = n === "all" || v === n, H = !s || (l.title || "").toLowerCase().includes(s);
+      return z && H;
     }), p = Math.max(1, Math.ceil(c.length / f));
     o < 0 && (o = 0), o >= p && (o = p - 1), this._pageState.set("c:" + e, o);
     const d = c.slice(o * f, (o + 1) * f);
@@ -674,8 +674,8 @@ const L = class L extends HTMLElement {
         });
       });
     });
-    const p = await O(this.getAttribute("katex-cdn"));
-    B(a, p);
+    const p = await B(this.getAttribute("katex-cdn"));
+    I(a, p);
   }
   // ── Lesson card click → mode picker → launch ────────────────────
   _handleLessonCardClick(t) {
@@ -780,7 +780,7 @@ const L = class L extends HTMLElement {
     })), this._debug() && console.warn("[canvasa] error", t, e);
   }
 };
-L.observedAttributes = [
+T.observedAttributes = [
   "tenant",
   "mode",
   "default-tab",
@@ -793,12 +793,12 @@ L.observedAttributes = [
   "katex-cdn",
   "debug"
 ];
-let E = L;
-function I() {
-  typeof window > "u" || window.customElements.get("canvasa-tutor") || window.customElements.define("canvasa-tutor", E);
+let C = T;
+function U() {
+  typeof window > "u" || window.customElements.get("canvasa-tutor") || window.customElements.define("canvasa-tutor", C);
 }
-const U = "https://canvasa.olympiz.ai", N = "default";
-class F extends HTMLElement {
+const F = "https://canvasa.olympiz.ai", N = "default";
+class G extends HTMLElement {
   constructor() {
     super(...arguments), this._iframe = null, this._onMessage = this._handleMessage.bind(this), this._ready = !1;
   }
@@ -819,7 +819,7 @@ class F extends HTMLElement {
     return this._buildUrl();
   }
   _buildUrl() {
-    const t = (this.getAttribute("host") || U).replace(/\/$/, ""), o = (this.getAttribute("mode") || "teach").toLowerCase() === "guide" ? "/guide" : "/tutor", r = (this.getAttribute("lesson") || "").trim(), a = (this.getAttribute("tenant") || N).trim(), n = (this.getAttribute("return-url") || "").trim(), s = new URLSearchParams();
+    const t = (this.getAttribute("host") || F).replace(/\/$/, ""), o = (this.getAttribute("mode") || "teach").toLowerCase() === "guide" ? "/guide" : "/tutor", r = (this.getAttribute("lesson") || "").trim(), a = (this.getAttribute("tenant") || N).trim(), n = (this.getAttribute("return-url") || "").trim(), s = new URLSearchParams();
     return r && s.set("lesson", r), s.set("brand", a), n && s.set("return", n), `${t}${o}?${s.toString()}`;
   }
   _render() {
@@ -878,11 +878,96 @@ class F extends HTMLElement {
     })));
   }
 }
-typeof customElements < "u" && !customElements.get("canvasa-chalkboard") && customElements.define("canvasa-chalkboard", F);
-I();
+typeof customElements < "u" && !customElements.get("canvasa-chalkboard") && customElements.define("canvasa-chalkboard", G);
+class L extends HTMLElement {
+  connectedCallback() {
+    this.isConnected && (this._renderStub(), queueMicrotask(() => {
+      this.dispatchEvent(new CustomEvent("canvasa-ready", {
+        bubbles: !0,
+        composed: !0,
+        detail: {
+          version: x,
+          status: "stub",
+          capability: this._stubMeta().capability,
+          plannedVersion: this._stubMeta().plannedVersion
+        }
+      }));
+    }));
+  }
+  _renderStub() {
+    for (; this.firstChild; ) this.removeChild(this.firstChild);
+    this.style.display || (this.style.display = "block");
+    const t = this._stubMeta(), e = document.createElement("div");
+    e.setAttribute("part", "stub-card"), e.style.cssText = [
+      "padding:32px",
+      "border-radius:14px",
+      "background:var(--tutor-hero-bg, linear-gradient(135deg, #0b1e2c 0%, #163a52 100%))",
+      "color:var(--tutor-hero-fg, #f3f6fb)",
+      'font:14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      "text-align:left",
+      "box-shadow:0 2px 18px rgba(0,0,0,0.18)"
+    ].join(";");
+    const o = document.createElement("div");
+    o.style.cssText = "display:inline-block; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; opacity:0.7; margin-bottom:8px;", o.textContent = `Canvas A SDK · ${t.capability}`, e.appendChild(o);
+    const r = document.createElement("div");
+    r.style.cssText = "font-size:20px; font-weight:600; margin-bottom:6px; color:var(--tutor-accent, currentColor);", r.textContent = `Coming in ${t.plannedVersion}`, e.appendChild(r);
+    const a = document.createElement("div");
+    if (a.style.cssText = "opacity:0.85; max-width:60ch;", a.textContent = t.description, e.appendChild(a), t.docsHref) {
+      const n = document.createElement("a");
+      n.href = t.docsHref, n.target = "_blank", n.rel = "noopener", n.textContent = "Read the contract →", n.style.cssText = "display:inline-block; margin-top:14px; color:var(--tutor-accent, #f6d77a); text-decoration:none; font-size:13px;", e.appendChild(n);
+    }
+    this.appendChild(e);
+  }
+}
+class W extends L {
+  static get observedAttributes() {
+    return ["problem", "host", "tenant", "mode", "level", "return-url"];
+  }
+  _stubMeta() {
+    return {
+      capability: "Problem walker",
+      plannedVersion: "v0.3",
+      description: "Single-problem deep-dive — progressive hints, step-by-step solution, inline AI tutor chat scoped to this problem. Wire up the listeners today; they fire once the backend ships.",
+      docsHref: "https://github.com/mukesh-bansal/canvasa-sdk#canvasa-problem-walker"
+    };
+  }
+}
+typeof customElements < "u" && !customElements.get("canvasa-problem-walker") && customElements.define("canvasa-problem-walker", W);
+class R extends L {
+  static get observedAttributes() {
+    return ["domain", "level", "host", "tenant", "user-id", "compact", "highlight"];
+  }
+  _stubMeta() {
+    return {
+      capability: "Skill tree",
+      plannedVersion: "v0.3",
+      description: "Concept-graph visualization with user-progress overlay. Highlights mastered nodes, surfaces suggested next concepts, drills into any node to launch the relevant lesson or problem walker. Wire up the click listener today; it fires once the renderer ships.",
+      docsHref: "https://github.com/mukesh-bansal/canvasa-sdk#canvasa-skill-tree"
+    };
+  }
+}
+typeof customElements < "u" && !customElements.get("canvasa-skill-tree") && customElements.define("canvasa-skill-tree", R);
+class Q extends L {
+  static get observedAttributes() {
+    return ["host", "tenant", "voice", "topic-context", "user-id", "open"];
+  }
+  _stubMeta() {
+    return {
+      capability: "Coach chat",
+      plannedVersion: "v0.3",
+      description: "Free-form text + voice chat with the Canvas A coach. Travels with the student across lesson / problem walker / skill tree, hands off to those surfaces via canvasa-coach-action events. Wire up the listener today; it fires once the streaming backend ships.",
+      docsHref: "https://github.com/mukesh-bansal/canvasa-sdk#canvasa-coach-chat"
+    };
+  }
+}
+typeof customElements < "u" && !customElements.get("canvasa-coach-chat") && customElements.define("canvasa-coach-chat", Q);
+U();
 typeof window < "u" && (window.canvasa = window.canvasa ?? { version: x });
 export {
   x as CANVASA_SDK_VERSION,
-  F as CanvasaChalkboardElement
+  G as CanvasaChalkboardElement,
+  Q as CanvasaCoachChatElement,
+  W as CanvasaProblemWalkerElement,
+  R as CanvasaSkillTreeElement
 };
 //# sourceMappingURL=canvasa-sdk.js.map
