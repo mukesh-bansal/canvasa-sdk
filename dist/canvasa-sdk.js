@@ -1,10 +1,10 @@
-const $ = "0.1.0-alpha.12";
-let I = "https://canvasa.olympiz.ai", L = "default";
+const $ = "0.1.0-alpha.13";
+let O = "https://canvasa.olympiz.ai", T = "default";
 function B(i) {
-  i.host && (I = i.host.replace(/\/$/, "")), i.tenant && (L = i.tenant);
+  i.host && (O = i.host.replace(/\/$/, "")), i.tenant && (T = i.tenant);
 }
 function P(i, t) {
-  const e = new URL(`${I}/api${i}`);
+  const e = new URL(`${O}/api${i}`);
   if (t)
     for (const [o, n] of Object.entries(t))
       n != null && n !== "" && e.searchParams.set(o, String(n));
@@ -12,18 +12,18 @@ function P(i, t) {
 }
 async function _(i, t) {
   const e = await fetch(P(i, t), {
-    headers: { "X-Tutor-Tenant": L, Accept: "application/json" },
+    headers: { "X-Tutor-Tenant": T, Accept: "application/json" },
     credentials: "omit"
   });
   if (!e.ok) throw new Error(`canvasa-api ${i} HTTP ${e.status}`);
   return await e.json();
 }
-async function U(i, t) {
+async function I(i, t) {
   const e = await fetch(P(i), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-Tutor-Tenant": L,
+      "X-Tutor-Tenant": T,
       Accept: "application/json"
     },
     body: JSON.stringify(t),
@@ -35,7 +35,7 @@ async function U(i, t) {
 async function D(i, t) {
   const e = await fetch(P(i), {
     method: "POST",
-    headers: { "X-Tutor-Tenant": L, Accept: "application/json" },
+    headers: { "X-Tutor-Tenant": T, Accept: "application/json" },
     body: t,
     credentials: "omit"
   });
@@ -65,8 +65,8 @@ const w = {
     level: o,
     q: n
   }),
-  generateLesson: (i) => U("/generate-lesson", { topic: i }),
-  generateFromUrl: (i, t) => U("/generate-from-url", { url: i, title: t }),
+  generateLesson: (i) => I("/generate-lesson", { topic: i }),
+  generateFromUrl: (i, t) => I("/generate-from-url", { url: i, title: t }),
   generateFromPdf: (i) => {
     const t = new FormData();
     return t.append("file", i), D("/generate-from-pdf", t);
@@ -77,7 +77,7 @@ const w = {
   // Phase 3 endpoint — graceful fallback handled in canvasa-tutor.ts when missing
   brand: (i) => _(`/brand/${encodeURIComponent(i)}`)
 }, G = ':root,.tutor-root{--tutor-bg: #fbfaf6;--tutor-surface: #ffffff;--tutor-surface-soft: #f6f4ee;--tutor-text: #1a1a2e;--tutor-muted: #4a4a5a;--tutor-faint: #8b8b9b;--tutor-border: #e7ecf3;--tutor-border-soft: #efefe7;--tutor-accent: #c9a227;--tutor-accent-soft: rgba(201, 162, 39, .12);--tutor-accent-strong:#8f7016;--tutor-on-accent: #14213d;--tutor-primary: #14213d;--tutor-primary-hover:#0a162b;--tutor-on-primary: #ffffff;--tutor-success: #047857;--tutor-warning: #b45309;--tutor-danger: #b91c1c;--tutor-radius: 12px;--tutor-radius-sm: 8px;--tutor-radius-lg: 18px;--tutor-font-display: "Playfair Display", Georgia, serif;--tutor-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;--tutor-font-mono: "JetBrains Mono", ui-monospace, monospace;--tutor-shadow-sm: 0 1px 3px rgba(0,0,0,.04);--tutor-shadow: 0 4px 14px rgba(0,0,0,.06)}.tutor-page{max-width:1100px;margin:0 auto;padding:32px 16px 64px;font-family:var(--tutor-font-body);color:var(--tutor-text);background:var(--tutor-bg)}.tutor-hero{text-align:center;margin-bottom:40px}.tutor-hero h1{font-family:var(--tutor-font-display);font-size:clamp(2rem,4vw,3rem);line-height:1.15;margin:0 0 8px;color:var(--tutor-text);font-weight:700}.tutor-hero h1 em{color:var(--tutor-accent-strong);font-style:italic}.tutor-hero p{color:var(--tutor-muted);font-size:1.05rem;margin:0}.tutor-tabs{display:flex;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--tutor-border);margin-bottom:24px}.tutor-tab{background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 0;font:inherit;color:var(--tutor-muted);cursor:pointer;font-size:.95rem;white-space:nowrap;transition:color .15s,border-color .15s}.tutor-tab:hover{color:var(--tutor-text)}.tutor-tab.is-active{color:var(--tutor-text);border-bottom-color:var(--tutor-accent-strong);font-weight:500}.tutor-tab__count{color:var(--tutor-muted);font-size:.78rem;margin-left:4px;font-weight:400}.tutor-section{background:var(--tutor-surface);border:1px solid var(--tutor-border);border-radius:var(--tutor-radius);padding:20px 22px;margin-bottom:16px;box-shadow:var(--tutor-shadow-sm)}.tutor-section h2{font-family:var(--tutor-font-display);font-size:1.35rem;font-weight:600;margin:0 0 12px;color:var(--tutor-text)}.tutor-section h3{font-family:var(--tutor-font-display);font-size:1.05rem;font-weight:500;margin:0 0 8px;color:var(--tutor-text);display:flex;align-items:center;gap:8px}.tutor-section__sub{font-size:.78rem;color:var(--tutor-muted);margin:-8px 0 14px}.tutor-input{display:block;width:100%;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-text);font:inherit;font-size:.95rem;transition:border-color .15s,box-shadow .15s}.tutor-input::placeholder{color:var(--tutor-faint)}.tutor-input:focus{outline:none;border-color:var(--tutor-accent-strong);box-shadow:0 0 0 3px var(--tutor-accent-soft)}.tutor-input--sm{padding:8px 12px;font-size:.9rem}.tutor-row{display:flex;gap:10px;flex-wrap:wrap}@media (min-width: 640px){.tutor-row{flex-wrap:nowrap}}.tutor-row>.tutor-input{flex:1 1 auto}.tutor-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:var(--tutor-radius-sm);border:1px solid transparent;background:var(--tutor-primary);color:var(--tutor-on-primary);font:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,opacity .15s}.tutor-btn:hover:not(:disabled){background:var(--tutor-primary-hover)}.tutor-btn:disabled{opacity:.5;cursor:not-allowed}.tutor-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);font:inherit;font-size:.78rem;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s}.tutor-chip:hover{border-color:var(--tutor-accent-strong);color:var(--tutor-text)}.tutor-chip.is-active{background:var(--tutor-primary);color:var(--tutor-on-primary);border-color:var(--tutor-primary)}.tutor-sources{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}@media (min-width: 720px){.tutor-sources{grid-template-columns:1fr 1fr 1fr}}.tutor-source{text-align:left;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;transition:border-color .15s,background .15s}.tutor-source:hover{border-color:var(--tutor-accent-strong)}.tutor-source.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-source__row{display:flex;gap:10px;align-items:flex-start}.tutor-source__dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--tutor-border);margin-top:4px;flex-shrink:0}.tutor-source.is-active .tutor-source__dot{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-strong)}.tutor-source__lbl{font-weight:500;font-size:.9rem}.tutor-source__sub{font-size:.78rem;color:var(--tutor-muted);margin-top:2px}.tutor-results{margin-top:12px;border:1px solid var(--tutor-border);border-radius:var(--tutor-radius-sm);background:var(--tutor-bg);overflow:hidden}.tutor-result{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:transparent;font:inherit;color:var(--tutor-text);cursor:pointer;transition:background .12s;border-bottom:1px solid var(--tutor-border)}.tutor-result:last-child{border-bottom:none}.tutor-result:hover{background:var(--tutor-surface-soft)}.tutor-result__title{font-size:.9rem;font-weight:500}.tutor-result__blurb{font-size:.78rem;color:var(--tutor-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-hint{font-size:.72rem;color:var(--tutor-muted);margin-top:12px}.tutor-drop{border:2px dashed var(--tutor-border);background:var(--tutor-bg);border-radius:var(--tutor-radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}.tutor-drop:hover{border-color:var(--tutor-accent-strong)}.tutor-drop.is-hover{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-drop__icon{font-size:1.6rem;margin-bottom:8px}.tutor-drop__hint{color:var(--tutor-text);font-size:.92rem}.tutor-drop__hint strong{color:var(--tutor-accent-strong)}.tutor-card-grid{display:grid;grid-template-columns:1fr;gap:10px}@media (min-width: 720px){.tutor-card-grid{grid-template-columns:1fr 1fr}}@media (min-width: 1024px){.tutor-card-grid{grid-template-columns:1fr 1fr 1fr}}.tutor-card{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;transition:border-color .15s,box-shadow .15s}.tutor-card:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-card__title{font-size:.9rem}.tutor-card__meta{margin-top:6px;display:flex;gap:10px;font-size:.7rem;color:var(--tutor-muted);align-items:center}.tutor-card__cached{color:var(--tutor-success)}.tutor-prob{display:block;padding:12px 14px;border-radius:var(--tutor-radius-sm);border:1px solid var(--tutor-border);background:var(--tutor-bg);color:var(--tutor-text);text-decoration:none;margin-bottom:8px;transition:border-color .15s,box-shadow .15s}.tutor-prob:hover{border-color:var(--tutor-accent-strong);box-shadow:var(--tutor-shadow-sm)}.tutor-prob__head{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tutor-prob__title{font-size:.9rem;font-weight:500}.tutor-prob__statement{margin-top:6px;font-size:.78rem;color:var(--tutor-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.tutor-pill{font-size:.62rem;padding:2px 6px;border-radius:4px;border:1px solid var(--tutor-border);background:var(--tutor-surface);color:var(--tutor-muted);text-transform:lowercase;letter-spacing:.04em}.tutor-pill--easy{color:var(--tutor-success);border-color:#0478574d}.tutor-pill--medium{color:var(--tutor-warning);border-color:#b453094d}.tutor-pill--hard{color:var(--tutor-danger);border-color:#b91c1c4d}.tutor-status{margin-top:12px;font-size:.85rem;color:var(--tutor-muted)}.tutor-status--error{color:var(--tutor-danger)}.tutor-empty{font-size:.88rem;color:var(--tutor-muted);padding:12px 0}.tutor-modal-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:#0d122073;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}.tutor-modal{background:var(--tutor-surface);border-radius:var(--tutor-radius-lg);box-shadow:0 20px 60px #0000004d;padding:28px 32px;width:100%;max-width:560px;font-family:var(--tutor-font-body);color:var(--tutor-text)}.tutor-modal__eyebrow{font-size:11px;font-weight:600;color:var(--tutor-accent-strong);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px}.tutor-modal__title{font-family:var(--tutor-font-display);font-size:22px;font-weight:600;margin:0 0 4px;color:var(--tutor-text)}.tutor-modal__sub{font-size:12px;color:var(--tutor-muted);margin:0 0 18px}.tutor-modal__option{display:block;width:100%;text-align:left;padding:16px;border-radius:var(--tutor-radius-sm);border:2px solid var(--tutor-border);background:var(--tutor-surface);font:inherit;color:var(--tutor-text);cursor:pointer;margin-bottom:10px;transition:border-color .12s,background .12s}.tutor-modal__option:hover{border-color:var(--tutor-accent-strong)}.tutor-modal__option.is-active{border-color:var(--tutor-accent-strong);background:var(--tutor-accent-soft)}.tutor-modal__option-row{display:flex;align-items:flex-start;gap:12px}.tutor-modal__radio{margin-top:4px;width:16px;height:16px;border-radius:50%;border:2px solid var(--tutor-border);flex-shrink:0;display:flex;align-items:center;justify-content:center}.tutor-modal__option.is-active .tutor-modal__radio{border-color:var(--tutor-accent-strong)}.tutor-modal__radio-dot{width:8px;height:8px;border-radius:50%;background:var(--tutor-accent-strong)}.tutor-modal__option-title{font-family:var(--tutor-font-display);font-style:italic;font-weight:600;font-size:16px;color:var(--tutor-accent-strong);display:inline}.tutor-modal__option-badge{margin-left:8px;font-size:9px;font-weight:800;letter-spacing:.14em;padding:2px 6px;border-radius:3px;background:#3fcc7a2e;color:#1a7341;text-transform:uppercase}.tutor-modal__option-desc{font-size:12px;color:var(--tutor-muted);margin-top:6px;line-height:1.5}.tutor-modal__actions{margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.tutor-btn--ghost{background:transparent;color:var(--tutor-muted);border:1px solid var(--tutor-border);padding:8px 16px;border-radius:var(--tutor-radius-sm);font:inherit;font-size:13px;cursor:pointer;transition:color .12s,border-color .12s}.tutor-btn--ghost:hover:not(:disabled){color:var(--tutor-text);border-color:var(--tutor-accent-strong)}.tutor-btn--ghost:disabled{opacity:.5;cursor:not-allowed}.canvasa-tutor{position:relative}.canvasa-tutor__pill{position:absolute;top:12px;right:12px;z-index:9050;padding:4px 10px;border-radius:999px;background:var(--tutor-pill-bg, #0b1428);color:var(--tutor-pill-fg, #f6d77a);font:600 11px/1 JetBrains Mono,ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em;border:1px solid rgba(246,215,122,.25);box-shadow:0 2px 8px #0000002e;pointer-events:none;-webkit-user-select:none;user-select:none}.tutor-topic{border:1px solid var(--tutor-border, #e3dccb);border-radius:10px;background:var(--tutor-surface, #fdfaf2);margin:10px 0;overflow:hidden;transition:box-shadow .16s,border-color .16s}.tutor-topic:hover{border-color:var(--tutor-accent, #b08c30);box-shadow:0 2px 12px #0000000f}.tutor-topic.is-expanded{border-color:var(--tutor-accent, #b08c30);background:var(--tutor-surface, #fdfaf2)}.tutor-topic__head{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;-webkit-user-select:none;user-select:none;border-left:4px solid var(--tutor-accent, #b08c30)}.tutor-topic__icon{flex:0 0 28px;font-size:22px;line-height:1;text-align:center}.tutor-topic__name{flex:1 1 auto;font-size:16px;font-weight:600;color:var(--tutor-text, #2c2418);font-family:var(--tutor-font-display, "Playfair Display", Georgia, serif);letter-spacing:.005em}.tutor-topic__count{flex:0 0 auto;font-size:12px;color:var(--tutor-muted, #7a6c50);font-family:var(--tutor-font-mono, "JetBrains Mono", ui-monospace, monospace);text-transform:uppercase;letter-spacing:.08em}.tutor-topic__chev{flex:0 0 auto;font-size:11px;color:var(--tutor-muted, #7a6c50);margin-left:8px;transition:transform .18s ease;display:inline-block}.tutor-topic.is-expanded .tutor-topic__chev{transform:rotate(90deg);color:var(--tutor-accent, #b08c30)}.tutor-topic__body{padding:0 20px 18px;display:none}.tutor-topic.is-expanded .tutor-topic__body{display:block}', g = 30;
-function T() {
+function L() {
   return typeof window < "u" && window.CANVASA_HOST ? window.CANVASA_HOST : "https://canvasa.olympiz.ai";
 }
 let M = !1;
@@ -118,7 +118,7 @@ async function N(i) {
         const e = document.createElement("link");
         e.rel = "stylesheet", e.href = `${t}/katex.min.css`, e.crossOrigin = "anonymous", document.head.appendChild(e);
       }
-      await O(`${t}/katex.min.js`), await O(`${t}/contrib/auto-render.min.js`);
+      await U(`${t}/katex.min.js`), await U(`${t}/contrib/auto-render.min.js`);
       for (let e = 0; e < 30; e++) {
         if (typeof window.renderMathInElement == "function")
           return C = window.renderMathInElement, C;
@@ -130,14 +130,14 @@ async function N(i) {
     return null;
   })(), E;
 }
-function O(i) {
+function U(i) {
   return new Promise((t, e) => {
     if (document.querySelector(`script[src="${i}"]`)) return t();
     const o = document.createElement("script");
     o.src = i, o.async = !0, o.crossOrigin = "anonymous", o.onload = () => t(), o.onerror = (n) => e(n), document.head.appendChild(o);
   });
 }
-function R(i, t) {
+function W(i, t) {
   if (t)
     try {
       t(i, {
@@ -155,13 +155,13 @@ function R(i, t) {
     } catch {
     }
 }
-const z = class z extends HTMLElement {
+const q = class q extends HTMLElement {
   constructor() {
     super(...arguments), this._brand = null, this._ready = !1, this._tab = "ondemand", this._topic = "", this._conceptQuery = "", this._conceptLevel = "all", this._probQuery = "", this._probChip = "all", this._topicHeaders = [], this._topicSectionCache = /* @__PURE__ */ new Map(), this._problemHeaders = [], this._problemSectionCache = /* @__PURE__ */ new Map(), this._counts = null, this._busy = !1, this._busyMsg = "", this._errorMsg = "", this._expanded = /* @__PURE__ */ new Map(), this._pageState = /* @__PURE__ */ new Map();
   }
   // ── Lifecycle ───────────────────────────────────────────────────
   connectedCallback() {
-    F(), this.classList.add("canvasa-tutor", "tutor-root", "tutor-page"), B({ host: T(), tenant: this._tenant() });
+    F(), this.classList.add("canvasa-tutor", "tutor-root", "tutor-page"), B({ host: L(), tenant: this._tenant() });
     const t = this._readTabFromHash(), e = (() => {
       try {
         return window.sessionStorage.getItem("canvasa:active-tab") || "";
@@ -288,9 +288,9 @@ const z = class z extends HTMLElement {
       ondemand: "5 ways",
       concepts: this._counts ? String(this._counts.concepts_total) : "",
       problems: this._counts ? String(this._counts.problems_total) : ""
-    }, d = ((x = this._brand) == null ? void 0 : x.canvas_a_version) || ((k = this._brand) == null ? void 0 : k.olympiz_version) || "", h = d ? `SDK ${$} · srv ${d}` : `SDK ${$}`;
+    }, c = ((x = this._brand) == null ? void 0 : x.canvas_a_version) || ((k = this._brand) == null ? void 0 : k.olympiz_version) || "", h = c ? `SDK ${$} · srv ${c}` : `SDK ${$}`;
     this.innerHTML = `
-      <div class="canvasa-tutor__pill" title="Canvas A SDK ${$}${d ? ` · canvas-a backend ${d}` : ""}">${p(h)}</div>
+      <div class="canvasa-tutor__pill" title="Canvas A SDK ${$}${c ? ` · canvas-a backend ${c}` : ""}">${p(h)}</div>
       <section class="tutor-hero">
         <h1>${e}</h1>
         <p>${p(o)}</p>
@@ -314,8 +314,8 @@ const z = class z extends HTMLElement {
         this.setTab(S);
       });
     }), this._injectPillStyle();
-    const c = this.querySelector(".canvasa-tutor__panel");
-    c && (this._tab === "ondemand" ? this._renderOnDemand(c) : this._tab === "concepts" ? this._renderConcepts(c) : this._tab === "problems" && this._renderProblems(c));
+    const d = this.querySelector(".canvasa-tutor__panel");
+    d && (this._tab === "ondemand" ? this._renderOnDemand(d) : this._tab === "concepts" ? this._renderConcepts(d) : this._tab === "problems" && this._renderProblems(d));
   }
   _injectPillStyle() {
     const t = "canvasa-tutor-pill-style";
@@ -354,14 +354,16 @@ const z = class z extends HTMLElement {
       .tutor-mode-modal__opt { text-align: left; padding: 12px 14px; border: 1px solid var(--tutor-border, #e7ecf3); border-radius: var(--tutor-radius-sm, 8px); background: transparent; cursor: pointer; font: inherit; }
       .tutor-mode-modal__opt:hover { background: var(--tutor-accent-soft, rgba(201,162,39,0.10)); border-color: var(--tutor-accent, #c9a227); }
       .tutor-mode-modal__opt__title { font-weight: 600; color: var(--tutor-text, #1a1a2e); margin-bottom: 2px; }
+      .tutor-mode-modal__opt__title em { font-style: italic; font-weight: 400; color: var(--tutor-muted, #4a4a5a); }
+      .tutor-mode-modal__badge { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; background: var(--tutor-accent, #c9a227); color: #fff; font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; vertical-align: 2px; }
       .tutor-mode-modal__opt__desc { color: var(--tutor-muted, #4a4a5a); font-size: 12.5px; }
       .tutor-mode-modal__close { margin-top: 14px; background: transparent; border: none; color: var(--tutor-faint, #8b8b9b); font: inherit; font-size: 12.5px; cursor: pointer; padding: 6px 0 0; }
     `, document.head.appendChild(e);
   }
   // ── On-demand tab ───────────────────────────────────────────────
   _renderOnDemand(t) {
-    var d, h;
-    const e = ((d = this._brand) == null ? void 0 : d.copy) ?? {}, o = e.placeholderTopic ?? "e.g. Bernoulli's principle · Lenz's law · Maxwell's equations", n = this._slotText("cta-label") ?? e.ctaLabel ?? "AI Tutor →";
+    var c, h;
+    const e = ((c = this._brand) == null ? void 0 : c.copy) ?? {}, o = e.placeholderTopic ?? "e.g. Bernoulli's principle · Lenz's law · Maxwell's equations", n = this._slotText("cta-label") ?? e.ctaLabel ?? "AI Tutor →";
     t.innerHTML = `
       <section class="tutor-section">
         <h2>Type a topic.</h2>
@@ -383,10 +385,10 @@ const z = class z extends HTMLElement {
     const r = t.querySelector("[data-canvasa-topic]");
     r && (r.addEventListener("input", () => {
       this._topic = r.value;
-      const c = t.querySelector("[data-canvasa-launch-topic]");
-      c && (c.disabled = this._busy || !this._topic.trim());
-    }), r.addEventListener("keydown", (c) => {
-      c.key === "Enter" && this._handleTopicGo();
+      const d = t.querySelector("[data-canvasa-launch-topic]");
+      d && (d.disabled = this._busy || !this._topic.trim());
+    }), r.addEventListener("keydown", (d) => {
+      d.key === "Enter" && this._handleTopicGo();
     })), (h = t.querySelector("[data-canvasa-launch-topic]")) == null || h.addEventListener("click", () => this._handleTopicGo());
     const a = t.querySelector("[data-canvasa-source-picker]");
     a && this._mountSourcePicker(a);
@@ -410,17 +412,17 @@ const z = class z extends HTMLElement {
     const s = [
       { key: "internal", lbl: "Internal wiki", sub: "SuperStem Physics + AI + HS concept graphs" },
       { key: "external", lbl: "External wiki", sub: "Wikipedia — live" }
-    ], d = () => {
+    ], c = () => {
       t.innerHTML = `
         <h2>Or, point at a source.</h2>
         <div class="tutor-sources">
-          ${s.map((c) => `
-            <button type="button" class="tutor-source${e === c.key ? " is-active" : ""}" data-canvasa-src="${c.key}">
+          ${s.map((d) => `
+            <button type="button" class="tutor-source${e === d.key ? " is-active" : ""}" data-canvasa-src="${d.key}">
               <div class="tutor-source__row">
                 <span class="tutor-source__dot"></span>
                 <div>
-                  <div class="tutor-source__lbl">${p(c.lbl)}</div>
-                  <div class="tutor-source__sub">${p(c.sub)}</div>
+                  <div class="tutor-source__lbl">${p(d.lbl)}</div>
+                  <div class="tutor-source__sub">${p(d.sub)}</div>
                 </div>
               </div>
             </button>`).join("")}
@@ -430,47 +432,47 @@ const z = class z extends HTMLElement {
         ${r ? '<div class="tutor-status">Searching…</div>' : ""}
         ${n.length ? `
           <div class="tutor-results">
-            ${n.slice(0, 10).map((c) => `
-              <button type="button" class="tutor-result" data-canvasa-pick='${f(JSON.stringify({ url: c.url, title: c.title }))}'>
-                <div class="tutor-result__ttl">${p(c.title)}</div>
-                ${c.description || c.desc || c.snippet ? `<div class="tutor-result__desc">${p(c.description || c.desc || c.snippet || "")}</div>` : ""}
+            ${n.slice(0, 10).map((d) => `
+              <button type="button" class="tutor-result" data-canvasa-pick='${f(JSON.stringify({ url: d.url, title: d.title }))}'>
+                <div class="tutor-result__ttl">${p(d.title)}</div>
+                ${d.description || d.desc || d.snippet ? `<div class="tutor-result__desc">${p(d.description || d.desc || d.snippet || "")}</div>` : ""}
               </button>`).join("")}
           </div>` : ""}
         <div class="tutor-hint">
           Searches across SuperStem Physics Wiki (1400+ articles) · AI Wiki · HS Physics/Math/Chemistry concept graphs.
         </div>
-      `, t.querySelectorAll("[data-canvasa-src]").forEach((c) => {
-        c.addEventListener("click", () => {
-          e = c.dataset.canvasaSrc, d();
+      `, t.querySelectorAll("[data-canvasa-src]").forEach((d) => {
+        d.addEventListener("click", () => {
+          e = d.dataset.canvasaSrc, c();
         });
       });
       const h = t.querySelector("[data-canvasa-src-q]");
       h == null || h.addEventListener("input", () => {
         if (o = h.value, a && clearTimeout(a), !o.trim()) {
-          n = [], d();
+          n = [], c();
           return;
         }
         a = window.setTimeout(async () => {
-          r = !0, d();
+          r = !0, c();
           try {
             n = (e === "external" ? await w.wikiSearch(o.trim()) : await w.superstemSearch(o.trim())).results || [];
           } catch {
             n = [];
           } finally {
-            r = !1, d();
+            r = !1, c();
           }
         }, 300);
-      }), t.querySelectorAll("[data-canvasa-pick]").forEach((c) => {
-        c.addEventListener("click", () => {
+      }), t.querySelectorAll("[data-canvasa-pick]").forEach((d) => {
+        d.addEventListener("click", () => {
           try {
-            const b = JSON.parse(c.dataset.canvasaPick || "{}");
+            const b = JSON.parse(d.dataset.canvasaPick || "{}");
             b.url && this._launchUrl(b.url, b.title);
           } catch {
           }
         });
       });
     };
-    d();
+    c();
   }
   _mountPdfDrop(t) {
     t.innerHTML = `
@@ -512,7 +514,7 @@ const z = class z extends HTMLElement {
     if (!e || !o) return;
     t.querySelectorAll("[data-canvasa-clvl]").forEach((s) => {
       s.addEventListener("click", () => {
-        this._conceptLevel = s.dataset.canvasaClvl, t.querySelectorAll("[data-canvasa-clvl]").forEach((d) => d.classList.toggle("is-active", d.dataset.canvasaClvl === this._conceptLevel)), this._topicSectionCache.clear(), this._pageState.clear(), this._rerenderConceptTopics(o);
+        this._conceptLevel = s.dataset.canvasaClvl, t.querySelectorAll("[data-canvasa-clvl]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaClvl === this._conceptLevel)), this._topicSectionCache.clear(), this._pageState.clear(), this._rerenderConceptTopics(o);
       });
     });
     let n = null;
@@ -529,7 +531,7 @@ const z = class z extends HTMLElement {
         e.textContent = "Failed to load: " + String(s), this._fireError("library-topics-failed", String(s), s);
         return;
       }
-    const a = this._topicHeaders.reduce((s, d) => s + (d.count || 0), 0);
+    const a = this._topicHeaders.reduce((s, c) => s + (c.count || 0), 0);
     e.textContent = `${a.toLocaleString()} lessons across ${this._topicHeaders.length} topics — click a section to expand.`, this._rerenderConceptTopics(o);
   }
   _conceptLevelCount(t) {
@@ -547,9 +549,9 @@ const z = class z extends HTMLElement {
   _rerenderConceptTopics(t) {
     const e = this._conceptLevel, o = this._conceptQuery.trim(), n = e !== "all" || !!o;
     t.innerHTML = this._topicHeaders.map((r, a) => {
-      const s = this._conceptLevelCount(r), d = this._expanded.get("c:" + a) ?? a === 0, h = o ? `${r.count} lessons · search active` : `${s} lesson${s === 1 ? "" : "s"}${n ? ` of ${r.count}` : ""}`, c = e !== "all" && s === 0 && !o;
+      const s = this._conceptLevelCount(r), c = this._expanded.get("c:" + a) ?? a === 0, h = o ? `${r.count} lessons · search active` : `${s} lesson${s === 1 ? "" : "s"}${n ? ` of ${r.count}` : ""}`, d = e !== "all" && s === 0 && !o;
       return `
-        <div class="tutor-topic${d ? " is-expanded" : ""}" data-canvasa-ctopic="${a}" data-canvasa-cname="${f(r.name)}" style="${c ? "display:none;" : ""}">
+        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-ctopic="${a}" data-canvasa-cname="${f(r.name)}" style="${d ? "display:none;" : ""}">
           <div class="tutor-topic__head" data-canvasa-ctoggle="${a}">
             <span class="tutor-topic__icon">${p(r.icon || "📘")}</span>
             <span class="tutor-topic__name">${p(r.name)}</span>
@@ -562,8 +564,8 @@ const z = class z extends HTMLElement {
       r.addEventListener("click", () => {
         const a = +(r.dataset.canvasaCtoggle || "0"), s = t.querySelector(`[data-canvasa-ctopic="${a}"]`);
         if (!s) return;
-        const d = !s.classList.contains("is-expanded");
-        s.classList.toggle("is-expanded", d), this._expanded.set("c:" + a, d), d && this._renderConceptTopicBody(t, a, 0);
+        const c = !s.classList.contains("is-expanded");
+        s.classList.toggle("is-expanded", c), this._expanded.set("c:" + a, c), c && this._renderConceptTopicBody(t, a, 0);
       });
     }), this._topicHeaders.forEach((r, a) => {
       (this._expanded.get("c:" + a) ?? a === 0) && this._renderConceptTopicBody(t, a, this._pageState.get("c:" + a) ?? 0);
@@ -575,15 +577,15 @@ const z = class z extends HTMLElement {
     if (!n) return;
     const r = t.querySelector(`[data-canvasa-ctopic-body="${e}"]`);
     if (!r) return;
-    const a = this._conceptLevel, s = this._conceptQuery.trim(), d = n.name, h = Math.max(0, o * g), c = this._topicSectionCache.get(d), b = c && c.level === a && c.q === s && c.offset === h && c.limit === g;
+    const a = this._conceptLevel, s = this._conceptQuery.trim(), c = n.name, h = Math.max(0, o * g), d = this._topicSectionCache.get(c), b = d && d.level === a && d.q === s && d.offset === h && d.limit === g;
     let y, m;
-    if (b && c)
-      y = c.lessons, m = c.total;
+    if (b && d)
+      y = d.lessons, m = d.total;
     else {
       r.innerHTML = '<div class="tutor-empty">Loading…</div>', r.dataset.rendered = "0";
       try {
         const l = await w.libraryTopicSection(n.name, h, g, a, s);
-        y = l.lessons || [], m = l.total || 0, this._topicSectionCache.set(d, { lessons: y, total: m, offset: h, limit: g, level: a, q: s });
+        y = l.lessons || [], m = l.total || 0, this._topicSectionCache.set(c, { lessons: y, total: m, offset: h, limit: g, level: a, q: s });
       } catch (l) {
         r.innerHTML = `<div class="tutor-empty">Failed to load: ${p(String(l))}</div>`, this._fireError("library-topic-section-failed", String(l), l);
         return;
@@ -646,7 +648,7 @@ const z = class z extends HTMLElement {
     if (!e || !o) return;
     t.querySelectorAll("[data-canvasa-pchip]").forEach((s) => {
       s.addEventListener("click", () => {
-        this._probChip = s.dataset.canvasaPchip, t.querySelectorAll("[data-canvasa-pchip]").forEach((d) => d.classList.toggle("is-active", d.dataset.canvasaPchip === this._probChip)), this._problemSectionCache.clear(), this._pageState.clear(), this._rerenderProblemSections(o);
+        this._probChip = s.dataset.canvasaPchip, t.querySelectorAll("[data-canvasa-pchip]").forEach((c) => c.classList.toggle("is-active", c.dataset.canvasaPchip === this._probChip)), this._problemSectionCache.clear(), this._pageState.clear(), this._rerenderProblemSections(o);
       });
     });
     let n = null;
@@ -663,7 +665,7 @@ const z = class z extends HTMLElement {
         e.textContent = "Failed to load: " + String(s), this._fireError("problems-library-failed", String(s), s);
         return;
       }
-    const a = this._problemHeaders.reduce((s, d) => s + (d.count || 0), 0);
+    const a = this._problemHeaders.reduce((s, c) => s + (c.count || 0), 0);
     e.textContent = `${a.toLocaleString()} problems across ${this._problemHeaders.length} sections — click a section to expand.`, this._rerenderProblemSections(o);
   }
   _probChipToLevel() {
@@ -699,9 +701,9 @@ const z = class z extends HTMLElement {
   _rerenderProblemSections(t) {
     const e = this._probChip, o = this._probQuery.trim(), n = e !== "all" || !!o;
     t.innerHTML = this._problemHeaders.map((r, a) => {
-      const s = this._problemChipCount(r), d = this._expanded.get("p:" + a) ?? a === 0, h = o ? `${r.count} problems · search active` : `${s} problem${s === 1 ? "" : "s"}${n ? ` of ${r.count}` : ""}`, c = e !== "all" && s === 0 && !o;
+      const s = this._problemChipCount(r), c = this._expanded.get("p:" + a) ?? a === 0, h = o ? `${r.count} problems · search active` : `${s} problem${s === 1 ? "" : "s"}${n ? ` of ${r.count}` : ""}`, d = e !== "all" && s === 0 && !o;
       return `
-        <div class="tutor-topic${d ? " is-expanded" : ""}" data-canvasa-psec="${a}" data-canvasa-pname="${f(r.name)}" style="${c ? "display:none;" : ""}">
+        <div class="tutor-topic${c ? " is-expanded" : ""}" data-canvasa-psec="${a}" data-canvasa-pname="${f(r.name)}" style="${d ? "display:none;" : ""}">
           <div class="tutor-topic__head" data-canvasa-ptoggle="${a}">
             <span class="tutor-topic__icon">${p(r.icon || "📘")}</span>
             <span class="tutor-topic__name">${p(r.name)}</span>
@@ -714,8 +716,8 @@ const z = class z extends HTMLElement {
       r.addEventListener("click", () => {
         const a = +(r.dataset.canvasaPtoggle || "0"), s = t.querySelector(`[data-canvasa-psec="${a}"]`);
         if (!s) return;
-        const d = !s.classList.contains("is-expanded");
-        s.classList.toggle("is-expanded", d), this._expanded.set("p:" + a, d), d && this._renderProblemSectionBody(t, a, 0);
+        const c = !s.classList.contains("is-expanded");
+        s.classList.toggle("is-expanded", c), this._expanded.set("p:" + a, c), c && this._renderProblemSectionBody(t, a, 0);
       });
     }), this._problemHeaders.forEach((r, a) => {
       (this._expanded.get("p:" + a) ?? a === 0) && this._renderProblemSectionBody(t, a, this._pageState.get("p:" + a) ?? 0);
@@ -727,15 +729,15 @@ const z = class z extends HTMLElement {
     if (!n) return;
     const r = t.querySelector(`[data-canvasa-psec-body="${e}"]`);
     if (!r) return;
-    const a = this._probChip, s = this._probChipToLevel(), d = this._probQuery.trim(), h = n.name, c = Math.max(0, o * g), b = this._problemSectionCache.get(h), y = b && b.chip === a && b.q === d && b.offset === c && b.limit === g;
+    const a = this._probChip, s = this._probChipToLevel(), c = this._probQuery.trim(), h = n.name, d = Math.max(0, o * g), b = this._problemSectionCache.get(h), y = b && b.chip === a && b.q === c && b.offset === d && b.limit === g;
     let m, v;
     if (y && b)
       m = b.problems, v = b.total;
     else {
       r.innerHTML = '<div class="tutor-empty">Loading…</div>', r.dataset.rendered = "0";
       try {
-        const u = await w.problemsLibrarySection(n.name, c, g, s, d);
-        m = u.problems || [], v = u.total || 0, this._problemSectionCache.set(h, { problems: m, total: v, offset: c, limit: g, chip: a, q: d });
+        const u = await w.problemsLibrarySection(n.name, d, g, s, c);
+        m = u.problems || [], v = u.total || 0, this._problemSectionCache.set(h, { problems: m, total: v, offset: d, limit: g, chip: a, q: c });
       } catch (u) {
         r.innerHTML = `<div class="tutor-empty">Failed to load: ${p(String(u))}</div>`, this._fireError("problems-library-section-failed", String(u), u);
         return;
@@ -745,12 +747,12 @@ const z = class z extends HTMLElement {
     o < 0 && (o = 0), o >= x && (o = x - 1), this._pageState.set("p:" + e, o), r.innerHTML = `
       <div class="tutor-prob-list">
         ${m.map((u) => {
-      const q = u.level || "UG", j = u.difficulty || "medium";
-      return `<button type="button" class="tutor-prob" data-canvasa-lesson="${f(u.slug)}" data-canvasa-cached="${u.cached ? "1" : "0"}" data-canvasa-guide-cached="${u.guide_cached ? "1" : "0"}" data-canvasa-level="${f(q)}" data-canvasa-title="${f(u.title)}" data-canvasa-source="problem" data-canvasa-statement="${f(u.statement || "")}">
+      const z = u.level || "UG", j = u.difficulty || "medium";
+      return `<button type="button" class="tutor-prob" data-canvasa-lesson="${f(u.slug)}" data-canvasa-cached="${u.cached ? "1" : "0"}" data-canvasa-guide-cached="${u.guide_cached ? "1" : "0"}" data-canvasa-level="${f(z)}" data-canvasa-title="${f(u.title)}" data-canvasa-source="problem" data-canvasa-statement="${f(u.statement || "")}">
             <div class="tutor-prob__head">
               <span class="tutor-prob__title">${p(u.title)}</span>
               <span class="tutor-pill tutor-pill--${f(j)}">${p(j)}</span>
-              <span class="tutor-pill">${p(q)}</span>
+              <span class="tutor-pill">${p(z)}</span>
               ${u.source ? `<span class="tutor-prob__src">· ${p(u.source)}</span>` : ""}
               ${u.cached ? '<span class="tutor-prob__cached" title="Cached — instant load">✓</span>' : ""}
               ${u.guide_cached ? '<span class="tutor-prob__guide" title="Figure-It-Out cached">⚡</span>' : ""}
@@ -783,7 +785,7 @@ const z = class z extends HTMLElement {
       });
     });
     const k = await N(this.getAttribute("katex-cdn"));
-    R(r, k);
+    W(r, k);
   }
   // ── Lesson card click → mode picker → launch ────────────────────
   _handleLessonCardClick(t) {
@@ -844,15 +846,19 @@ const z = class z extends HTMLElement {
     e.className = "tutor-mode-modal", e.innerHTML = `
       <div class="tutor-mode-modal__card" role="dialog" aria-label="Pick a learning mode">
         <h3 class="tutor-mode-modal__title">${p(t.title || "Pick a learning mode")}</h3>
-        <p class="tutor-mode-modal__sub">Two ways to learn this — pick what suits you.</p>
+        <p class="tutor-mode-modal__sub">Three ways to learn this — pick what suits you.</p>
         <div class="tutor-mode-modal__opts">
           <button type="button" class="tutor-mode-modal__opt" data-mode="teach">
-            <div class="tutor-mode-modal__opt__title">Walk me through it (Teach-me)</div>
-            <div class="tutor-mode-modal__opt__desc">Linear lesson with synthesized audio + chalkboard visuals.</div>
+            <div class="tutor-mode-modal__opt__title">Lecture &middot; <em>"You teach, I learn."</em></div>
+            <div class="tutor-mode-modal__opt__desc">Tutor narrates every step beat-by-beat. Watch the board, listen along, ask tangents anytime.</div>
           </button>
           <button type="button" class="tutor-mode-modal__opt" data-mode="guide">
-            <div class="tutor-mode-modal__opt__title">Guide me to figure it out</div>
-            <div class="tutor-mode-modal__opt__desc">Socratic checkpoints + hints. You drive; the tutor scaffolds.</div>
+            <div class="tutor-mode-modal__opt__title">Guide &middot; <em>"You guide, I do it."</em></div>
+            <div class="tutor-mode-modal__opt__desc">Tutor poses each step as a question. You answer (multiple choice or type). Tutor verifies, comments, and guides forward.</div>
+          </button>
+          <button type="button" class="tutor-mode-modal__opt" data-mode="together">
+            <div class="tutor-mode-modal__opt__title">Together &middot; <em>"Let&rsquo;s solve together."</em> <span class="tutor-mode-modal__badge">NEW</span></div>
+            <div class="tutor-mode-modal__opt__desc">You and the tutor solve the problem together, trading turns step-by-step until the solution emerges.</div>
           </button>
         </div>
         <button type="button" class="tutor-mode-modal__close" data-cancel>Cancel</button>
@@ -864,7 +870,9 @@ const z = class z extends HTMLElement {
     }), (r = e.querySelector("[data-cancel]")) == null || r.addEventListener("click", o), e.querySelectorAll("[data-mode]").forEach((a) => {
       a.addEventListener("click", () => {
         const s = a.dataset.mode || "teach";
-        o(), this._dispatchLaunch(t, s === "guide" ? "guide" : "teach");
+        o();
+        const c = s === "guide" || s === "together" ? "guide" : "teach";
+        this._dispatchLaunch(t, c);
       });
     });
     const n = (a) => {
@@ -884,11 +892,11 @@ const z = class z extends HTMLElement {
     const r = (e.mode === "guide" ? "guide" : "tutor") === "guide" ? "/guide" : "/tutor", a = new URLSearchParams();
     if (e.lesson && a.set("lesson", e.lesson), e.ask && a.set("ask", e.ask), a.set("brand", this._tenant()), e.level && a.set("level", e.level), typeof window < "u" && window.location) {
       a.set("return", window.location.href);
-      const s = `${T()}${r}?${a.toString()}`, d = this.getAttribute("lesson-target") || "self";
-      if (d === "blank")
+      const s = `${L()}${r}?${a.toString()}`, c = this.getAttribute("lesson-target") || "self";
+      if (c === "blank")
         window.open(s, "_blank", "noopener");
-      else if (d.startsWith(".") || d.startsWith("#")) {
-        const h = document.querySelector(d);
+      else if (c.startsWith(".") || c.startsWith("#")) {
+        const h = document.querySelector(c);
         h && "src" in h && (h.src = s);
       } else
         window.location.assign(s);
@@ -897,7 +905,7 @@ const z = class z extends HTMLElement {
   _launchUrl(t, e) {
     this._busy = !0, this._busyMsg = "Opening tutor…", this._render();
     const o = new URLSearchParams();
-    o.set("ask", e && e.trim() || t), o.set("brand", this._tenant()), typeof window < "u" && window.location && o.set("return", window.location.href), window.location.assign(`${T()}/tutor?${o.toString()}`);
+    o.set("ask", e && e.trim() || t), o.set("brand", this._tenant()), typeof window < "u" && window.location && o.set("return", window.location.href), window.location.assign(`${L()}/tutor?${o.toString()}`);
   }
   async _launchPdf(t) {
     this._busy = !0, this._busyMsg = "Reading PDF…", this._errorMsg = "", this._render();
@@ -931,7 +939,7 @@ const z = class z extends HTMLElement {
     })), this._debug() && console.warn("[canvasa] error", t, e);
   }
 };
-z.observedAttributes = [
+q.observedAttributes = [
   "tenant",
   "mode",
   "default-tab",
@@ -944,8 +952,8 @@ z.observedAttributes = [
   "katex-cdn",
   "debug"
 ];
-let A = z;
-function W() {
+let A = q;
+function R() {
   typeof window > "u" || window.customElements.get("canvasa-tutor") || window.customElements.define("canvasa-tutor", A);
 }
 const V = "https://canvasa.olympiz.ai", J = "default";
@@ -1112,7 +1120,7 @@ class Y extends H {
   }
 }
 typeof customElements < "u" && !customElements.get("canvasa-coach-chat") && customElements.define("canvasa-coach-chat", Y);
-W();
+R();
 typeof window < "u" && (window.canvasa = window.canvasa ?? { version: $ });
 export {
   $ as CANVASA_SDK_VERSION,

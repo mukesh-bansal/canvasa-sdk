@@ -35,7 +35,7 @@ import tutorCss from '../styles/tutor.css?inline'
 // ───────────────────────────────────────────────────────────────────
 
 export type CanvasaTutorTab = 'ondemand' | 'concepts' | 'problems'
-export type CanvasaLessonMode = 'teach' | 'guide' | 'picker'
+export type CanvasaLessonMode = 'teach' | 'guide' | 'together' | 'picker'
 export type SourceKind = 'internal' | 'external'
 export type ConceptLevel = 'all' | 'HS' | 'UG' | 'G'
 export type ProbChip = 'all' | 'HS' | 'UG' | 'G' | 'Olympiad' | 'cached'
@@ -480,6 +480,8 @@ export class CanvasaTutorElement extends HTMLElement {
       .tutor-mode-modal__opt { text-align: left; padding: 12px 14px; border: 1px solid var(--tutor-border, #e7ecf3); border-radius: var(--tutor-radius-sm, 8px); background: transparent; cursor: pointer; font: inherit; }
       .tutor-mode-modal__opt:hover { background: var(--tutor-accent-soft, rgba(201,162,39,0.10)); border-color: var(--tutor-accent, #c9a227); }
       .tutor-mode-modal__opt__title { font-weight: 600; color: var(--tutor-text, #1a1a2e); margin-bottom: 2px; }
+      .tutor-mode-modal__opt__title em { font-style: italic; font-weight: 400; color: var(--tutor-muted, #4a4a5a); }
+      .tutor-mode-modal__badge { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; background: var(--tutor-accent, #c9a227); color: #fff; font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; vertical-align: 2px; }
       .tutor-mode-modal__opt__desc { color: var(--tutor-muted, #4a4a5a); font-size: 12.5px; }
       .tutor-mode-modal__close { margin-top: 14px; background: transparent; border: none; color: var(--tutor-faint, #8b8b9b); font: inherit; font-size: 12.5px; cursor: pointer; padding: 6px 0 0; }
     `
@@ -1137,25 +1139,27 @@ export class CanvasaTutorElement extends HTMLElement {
   }
 
   private _openModePicker(detail: { slug: string; title: string; cached: boolean; source: string; statement?: string; ask?: string; guideCached?: boolean; level?: string }): void {
-    // v0.1.0-alpha.11: Universal Guide-Me. Backend now live-builds Mode 2
-    // skeletons on /guide?ask=&level= via /api/mode2/quick-skeleton, so both
-    // modes work for ANY topic regardless of guide_cached. We always show
-    // both options. Cached items load instantly; uncached items live-build
-    // (first content in ~12-18s like Walk-Me-Through).
+    // v0.1.0-alpha.13: 3 modes — Lecture · Guide · Together (NEW).
+    // Together is a PLACEHOLDER that routes to the same /guide URL as Guide
+    // for now. Real Together backend lands later — SDK absorbs the switch.
     const modal = document.createElement('div')
     modal.className = 'tutor-mode-modal'
     modal.innerHTML = `
       <div class="tutor-mode-modal__card" role="dialog" aria-label="Pick a learning mode">
         <h3 class="tutor-mode-modal__title">${escapeHtml(detail.title || 'Pick a learning mode')}</h3>
-        <p class="tutor-mode-modal__sub">Two ways to learn this — pick what suits you.</p>
+        <p class="tutor-mode-modal__sub">Three ways to learn this — pick what suits you.</p>
         <div class="tutor-mode-modal__opts">
           <button type="button" class="tutor-mode-modal__opt" data-mode="teach">
-            <div class="tutor-mode-modal__opt__title">Walk me through it (Teach-me)</div>
-            <div class="tutor-mode-modal__opt__desc">Linear lesson with synthesized audio + chalkboard visuals.</div>
+            <div class="tutor-mode-modal__opt__title">Lecture &middot; <em>"You teach, I learn."</em></div>
+            <div class="tutor-mode-modal__opt__desc">Tutor narrates every step beat-by-beat. Watch the board, listen along, ask tangents anytime.</div>
           </button>
           <button type="button" class="tutor-mode-modal__opt" data-mode="guide">
-            <div class="tutor-mode-modal__opt__title">Guide me to figure it out</div>
-            <div class="tutor-mode-modal__opt__desc">Socratic checkpoints + hints. You drive; the tutor scaffolds.</div>
+            <div class="tutor-mode-modal__opt__title">Guide &middot; <em>"You guide, I do it."</em></div>
+            <div class="tutor-mode-modal__opt__desc">Tutor poses each step as a question. You answer (multiple choice or type). Tutor verifies, comments, and guides forward.</div>
+          </button>
+          <button type="button" class="tutor-mode-modal__opt" data-mode="together">
+            <div class="tutor-mode-modal__opt__title">Together &middot; <em>"Let&rsquo;s solve together."</em> <span class="tutor-mode-modal__badge">NEW</span></div>
+            <div class="tutor-mode-modal__opt__desc">You and the tutor solve the problem together, trading turns step-by-step until the solution emerges.</div>
           </button>
         </div>
         <button type="button" class="tutor-mode-modal__close" data-cancel>Cancel</button>
@@ -1167,9 +1171,12 @@ export class CanvasaTutorElement extends HTMLElement {
     modal.querySelector<HTMLButtonElement>('[data-cancel]')?.addEventListener('click', close)
     modal.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) => {
       b.addEventListener('click', () => {
-        const mode = (b.dataset.mode as CanvasaLessonMode) || 'teach'
+        const raw = (b.dataset.mode as CanvasaLessonMode) || 'teach'
         close()
-        this._dispatchLaunch(detail, mode === 'guide' ? 'guide' : 'teach')
+        // Together is a placeholder — routes to /guide same as Guide for now.
+        const dispatchMode: CanvasaLessonMode =
+          (raw === 'guide' || raw === 'together') ? 'guide' : 'teach'
+        this._dispatchLaunch(detail, dispatchMode)
       })
     })
     // ESC to close
